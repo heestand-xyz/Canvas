@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "CoreGraphicsExtensions",
+        "repositoryURL": "https://github.com/heestand-xyz/CoreGraphicsExtensions",
+        "state": {
+          "branch": null,
+          "revision": "44c279943531758ad93f6407e2feb789007cd382",
+          "version": "1.0.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

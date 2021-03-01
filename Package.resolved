@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "MultiViews",
+        "repositoryURL": "https://github.com/heestand-xyz/MultiViews",
+        "state": {
+          "branch": null,
+          "revision": "a365e18dd41bf27b9ef2650327a00bd0c3d8c8a3",
+          "version": "1.3.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
