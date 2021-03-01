@@ -31,6 +31,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
     
     class Coordinator {
         
+        static let velocityStartDampenThreshold: CGFloat = 2.0
         static let velocityDampening: CGFloat = 0.98
         static let velocityRadiusThreshold: CGFloat = 0.02
         
@@ -78,6 +79,13 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 let canvasInteraction: CanvasInteraction = canvasInteractions[reverseIndex]
                 
                 if !canvasInteraction.active {
+                    if !canvasInteraction.auto {
+                        guard iOS && canvasInteraction.velocityRadius > Coordinator.velocityStartDampenThreshold else {
+                            canvasInteractions.remove(at: reverseIndex)
+                            continue
+                        }
+                        canvasInteraction.auto = true
+                    }
                     guard iOS && canvasInteraction.velocityRadius > Coordinator.velocityRadiusThreshold else {
                         canvasInteractions.remove(at: reverseIndex)
                         continue
@@ -126,20 +134,19 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             /// Pinch
             if let pinchInteraction: (CanvasInteraction, CanvasInteraction) = canvasPinchInteraction,
-               !pinchInteraction.0.active || !pinchInteraction.1.active {
+               pinchInteraction.0.auto || pinchInteraction.1.auto {
                 pinch()
             }
             
             /// Pan
             if let panInteraction: CanvasInteraction = canvasPanInteraction,
-               !panInteraction.active {
+               panInteraction.auto {
                 pan()
             }
             
         }
         
         func didMoveCanvasInteractions(_ canvasInteractions: [CanvasInteraction]) {
-            print(canvasInteractions.map(\.id), ">>>>", canvasPanInteraction?.id)
             if let panInteraction: CanvasInteraction = canvasPanInteraction,
                canvasInteractions.contains(panInteraction) {
                 pan()
@@ -152,15 +159,34 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         }
         
         func pan() {
+            
             guard let panInteraction: CanvasInteraction = canvasPanInteraction else { return }
+            
             canvasOffset += panInteraction.velocity
+            
         }
         
         
         func pinch() {
+            
             guard let pinchInteraction: (CanvasInteraction, CanvasInteraction) = canvasPinchInteraction else { return }
+            
             let averageVelocity: CGVector = (pinchInteraction.0.velocity + pinchInteraction.1.velocity) / 2.0
             canvasOffset += averageVelocity
+            
+            let distanceDirection: CGPoint = pinchInteraction.0.location - pinchInteraction.1.location
+            let distance: CGFloat = sqrt(pow(distanceDirection.x, 2.0) + pow(distanceDirection.y, 2.0))
+            let lastDistanceDirection: CGPoint = pinchInteraction.0.lastLocation - pinchInteraction.1.lastLocation
+            let lastDistance: CGFloat = sqrt(pow(lastDistanceDirection.x, 2.0) + pow(lastDistanceDirection.y, 2.0))
+            let relativeScale: CGFloat = distance / lastDistance
+            canvasScale *= relativeScale
+
+            let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
+            let averageLocationOffset: CGPoint = averageLocation - canvasOffset
+            let scaledAverageLocationOffset: CGPoint = averageLocationOffset * relativeScale
+            let relativeScaleOffset: CGPoint = averageLocationOffset - scaledAverageLocationOffset
+            canvasOffset += relativeScaleOffset
+            
         }
         
     }

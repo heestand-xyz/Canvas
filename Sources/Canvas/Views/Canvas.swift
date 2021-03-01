@@ -2,11 +2,11 @@ import SwiftUI
 
 public struct Canvas<GridContent: View, Content: View>: View {
     
-    let backgroundContent: (CGFloat) -> (GridContent)
+    let backgroundContent: (CanvasCoordinate) -> (GridContent)
     @Binding var frameContentList: [FrameContent<Content>]
     
     public init(frameContentList: Binding<[FrameContent<Content>]>,
-                background: @escaping (CGFloat) -> (GridContent)) {
+                background: @escaping (CanvasCoordinate) -> (GridContent)) {
         _frameContentList = frameContentList
         backgroundContent = background
     }
@@ -14,6 +14,11 @@ public struct Canvas<GridContent: View, Content: View>: View {
     @State var canvasOffset: CGPoint = .zero
     @State var canvasScale: CGFloat = 1.0
     @State var canvasAngle: Angle = .zero
+    var canvasCoordinate: CanvasCoordinate {
+        CanvasCoordinate(offset: canvasOffset,
+                         scale: canvasScale,
+                         angle: canvasAngle)
+    }
     
     @State var canvasInteractions: [CanvasInteraction] = []
     @State var canvasPanInteraction: CanvasInteraction? = nil
@@ -23,11 +28,9 @@ public struct Canvas<GridContent: View, Content: View>: View {
         
         ZStack(alignment: .topLeading) {
             
-            backgroundContent(canvasScale)
-                .rotationEffect(canvasAngle)
-                .offset(x: canvasOffset.x,
-                        y: canvasOffset.y)
+            backgroundContent(canvasCoordinate)
             
+            #if DEBUG
             ForEach(canvasInteractions) { canvasInteraction in
                 Circle()
                     .foregroundColor((canvasInteraction == canvasPanInteraction) ? .blue :
@@ -38,6 +41,7 @@ public struct Canvas<GridContent: View, Content: View>: View {
                     .offset(x: canvasInteraction.location.x - 25,
                             y: canvasInteraction.location.y - 25)
             }
+            #endif
             
             CanvasInteractViewRepresentable(canvasOffset: $canvasOffset,
                                             canvasScale: $canvasScale,
@@ -58,9 +62,7 @@ public struct Canvas<GridContent: View, Content: View>: View {
                 }
     
             }
-            .rotationEffect(canvasAngle)
-            .offset(x: canvasOffset.x,
-                    y: canvasOffset.y)
+            .canvasCoordinateRotationOffset(canvasCoordinate)
             
         }
         
