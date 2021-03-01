@@ -171,8 +171,12 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             guard let pinchInteraction: (CanvasInteraction, CanvasInteraction) = canvasPinchInteraction else { return }
             
+            // Position
+            
             let averageVelocity: CGVector = (pinchInteraction.0.velocity + pinchInteraction.1.velocity) / 2.0
             canvasOffset += averageVelocity
+            
+            // Scale
             
             let distanceDirection: CGPoint = pinchInteraction.0.location - pinchInteraction.1.location
             let distance: CGFloat = sqrt(pow(distanceDirection.x, 2.0) + pow(distanceDirection.y, 2.0))
@@ -186,6 +190,21 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             let scaledAverageLocationOffset: CGPoint = averageLocationOffset * relativeScale
             let relativeScaleOffset: CGPoint = averageLocationOffset - scaledAverageLocationOffset
             canvasOffset += relativeScaleOffset
+            
+            // Rotation
+            
+            let angleInRadians: CGFloat = atan2(distanceDirection.y, distanceDirection.x)
+            let lastAngleInRadians: CGFloat = atan2(lastDistanceDirection.y, lastDistanceDirection.x)
+            let relativeAngle: Angle = Angle(radians: Double(angleInRadians - lastAngleInRadians))
+            canvasAngle += relativeAngle
+            
+            let averageLocationOffsetRadius: CGFloat = sqrt(pow(averageLocationOffset.x, 2.0) + pow(averageLocationOffset.y, 2.0))
+            let averageLocationOffsetAngle: Angle = Angle(radians: Double(atan2(averageLocationOffset.y, averageLocationOffset.x)))
+            let rotatedAverageLocactionOffsetAngle: Angle = averageLocationOffsetAngle + relativeAngle
+            let rotatedAverageLocationOffset: CGPoint = CGPoint(x: cos(CGFloat(rotatedAverageLocactionOffsetAngle.radians)) * averageLocationOffsetRadius, y: sin(CGFloat(rotatedAverageLocactionOffsetAngle.radians)) * averageLocationOffsetRadius)
+            let relativeRotationOffset: CGPoint = averageLocationOffset - rotatedAverageLocationOffset
+            canvasOffset += relativeRotationOffset
+            
             
         }
         

@@ -20,7 +20,7 @@ public extension CanvasCoordinate {
 
 public extension View {
     func canvasCoordinateRotationOffset(_ canvasCoordinate: CanvasCoordinate) -> some View {
-        self.rotationEffect(canvasCoordinate.angle)
+        self.rotationEffect(canvasCoordinate.angle, anchor: .topLeading)
             .offset(x: canvasCoordinate.offset.x,
                     y: canvasCoordinate.offset.y)
     }
