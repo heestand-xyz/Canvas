@@ -14,7 +14,10 @@ public struct Canvas<GridContent: View, Content: View>: View {
     @State var canvasOffset: CGPoint = .zero
     @State var canvasScale: CGFloat = 1.0
     @State var canvasAngle: Angle = .zero
+    
     @State var canvasInteractions: [CanvasInteraction] = []
+    @State var canvasPanInteraction: CanvasInteraction? = nil
+    @State var canvasPinchInteraction: (CanvasInteraction, CanvasInteraction)? = nil
     
     public var body: some View {
         
@@ -25,10 +28,23 @@ public struct Canvas<GridContent: View, Content: View>: View {
                 .offset(x: canvasOffset.x,
                         y: canvasOffset.y)
             
+            ForEach(canvasInteractions) { canvasInteraction in
+                Circle()
+                    .foregroundColor((canvasInteraction == canvasPanInteraction) ? .blue :
+                                        (canvasInteraction == canvasPinchInteraction?.0 ||
+                                            canvasInteraction == canvasPinchInteraction?.1) ? .purple : .primary)
+                    .opacity(canvasInteraction.active ? 1.0 : 0.25)
+                    .frame(width: 50, height: 50)
+                    .offset(x: canvasInteraction.location.x - 25,
+                            y: canvasInteraction.location.y - 25)
+            }
+            
             CanvasInteractViewRepresentable(canvasOffset: $canvasOffset,
                                             canvasScale: $canvasScale,
                                             canvasAngle: $canvasAngle,
-                                            canvasInteractions: $canvasInteractions)
+                                            canvasInteractions: $canvasInteractions,
+                                            canvasPanInteraction: $canvasPanInteraction,
+                                            canvasPinchInteraction: $canvasPinchInteraction)
             
             ZStack(alignment: .topLeading) {
                 
