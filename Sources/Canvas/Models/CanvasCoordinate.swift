@@ -9,8 +9,12 @@ public struct CanvasCoordinate {
 }
 
 public extension CanvasCoordinate {
-    var scaledOffset: CGPoint {
-        offset * scale
+    var rotatedOffset: CGPoint {
+        var angle: Angle = Angle(radians: Double(atan2(offset.y, offset.x)))
+        angle -= self.angle
+        let radius: CGFloat = sqrt(pow(offset.x, 2.0) + pow(offset.y, 2.0))
+        return CGPoint(x: cos(CGFloat(angle.radians)) * radius,
+                       y: sin(CGFloat(angle.radians)) * radius)
     }
 }
 

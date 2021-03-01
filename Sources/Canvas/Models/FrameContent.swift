@@ -6,9 +6,9 @@ public struct FrameContent<Content: View>: Identifiable {
     
     public let id: UUID
     let canvasFrame: CGRect
-    let content: () -> (Content)
+    let content: (CanvasCoordinate) -> (Content)
     
-    public init(id: UUID, canvasFrame: CGRect, content: @escaping () -> (Content)) {
+    public init(id: UUID, canvasFrame: CGRect, content: @escaping (CanvasCoordinate) -> (Content)) {
         self.id = id
         self.canvasFrame = canvasFrame
         self.content = content

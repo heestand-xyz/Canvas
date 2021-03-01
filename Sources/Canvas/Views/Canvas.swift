@@ -53,7 +53,7 @@ public struct Canvas<GridContent: View, Content: View>: View {
             ZStack(alignment: .topLeading) {
                 
                 ForEach(frameContentList) { frameContent in
-                    frameContent.content()
+                    frameContent.content(canvasCoordinate)
                         .frame(width: frameContent.canvasFrame.width * canvasScale,
                                height: frameContent.canvasFrame.height * canvasScale)
                         .border(Color.red)
