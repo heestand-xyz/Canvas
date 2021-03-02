@@ -19,9 +19,15 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
     @Binding var canvasPinchInteraction: (CanvasInteraction, CanvasInteraction)?
     @Binding var canvasDragInteractions: [UUID: CanvasInteraction]
 
+    @State var canvasKeyboardKeys: Set<CanvasKeyboardKey> = []
+    @State var canvasMouseLocation: CGPoint? = nil
+
     func makeView(context: Context) -> CanvasInteractView {
         CanvasInteractView(canvasInteractions: $canvasInteractions,
-                           didMoveCanvasInteractions: context.coordinator.didMoveCanvasInteractions(_:))
+                           canvasKeyboardKeys: $canvasKeyboardKeys,
+                           canvasMouseLocation: $canvasMouseLocation,
+                           didMoveCanvasInteractions: context.coordinator.didMoveCanvasInteractions(_:),
+                           didScroll: context.coordinator.didScroll(_:))
     }
     
     func updateView(_ view: CanvasInteractView, context: Context) {}
@@ -36,12 +42,14 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                     canvasInteractions: $canvasInteractions,
                     canvasPanInteraction: $canvasPanInteraction,
                     canvasPinchInteraction: $canvasPinchInteraction,
-                    canvasDragInteractions: $canvasDragInteractions)
+                    canvasDragInteractions: $canvasDragInteractions,
+                    canvasKeyboardKeys: $canvasKeyboardKeys,
+                    canvasMouseLocation: $canvasMouseLocation)
     }
     
     class Coordinator<FrontContent: View, BackContent: View> {
         
-        let velocityStartDampenThreshold: CGFloat = 2.0
+        let velocityStartDampenThreshold: CGFloat = 5.0
         let velocityDampening: CGFloat = 0.98
         let velocityRadiusThreshold: CGFloat = 0.02
         let snapAngleRadius: Angle = Angle(degrees: 5)
@@ -64,6 +72,9 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
         @Binding var canvasPanInteraction: CanvasInteraction?
         @Binding var canvasPinchInteraction: (CanvasInteraction, CanvasInteraction)?
         @Binding var canvasDragInteractions: [UUID: CanvasInteraction]
+        
+        @Binding var canvasKeyboardKeys: Set<CanvasKeyboardKey>
+        @Binding var canvasMouseLocation: CGPoint?
 
         #if os(iOS)
         var displayLink: CADisplayLink!
@@ -78,7 +89,9 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
              canvasInteractions: Binding<[CanvasInteraction]>,
              canvasPanInteraction: Binding<CanvasInteraction?>,
              canvasPinchInteraction: Binding<(CanvasInteraction, CanvasInteraction)?>,
-             canvasDragInteractions: Binding<[UUID: CanvasInteraction]>) {
+             canvasDragInteractions: Binding<[UUID: CanvasInteraction]>,
+             canvasKeyboardKeys: Binding<Set<CanvasKeyboardKey>>,
+             canvasMouseLocation: Binding<CGPoint?>) {
             
             self.snapAngle = snapAngle
             self.snapGrid = snapGrid
@@ -90,6 +103,8 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             _canvasPanInteraction = canvasPanInteraction
             _canvasPinchInteraction = canvasPinchInteraction
             _canvasDragInteractions = canvasDragInteractions
+            _canvasKeyboardKeys = canvasKeyboardKeys
+            _canvasMouseLocation = canvasMouseLocation
             
             #if os(iOS)
             displayLink = CADisplayLink(target: self, selector: #selector(frameLoop))
@@ -229,6 +244,17 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             
         }
         
+        func didScroll(_ velocity: CGVector) {
+            if canvasKeyboardKeys.contains(.option) {
+                guard let mouseLocation: CGPoint = canvasMouseLocation else { return }
+                let relativeScale: CGFloat = 1.0 + velocity.dy * 0.0025
+                canvasScale *= relativeScale
+                canvasOffset += scaleOffset(relativeScale: relativeScale, at: mouseLocation)
+            } else {
+                canvasOffset += velocity
+            }
+        }
+        
         // MARK: - Drag
         
         func drag(id: UUID, interaction: CanvasInteraction) {
@@ -276,33 +302,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 self.frameContentList[index].center = position * (1.0 - fraction) + snapPosition * fraction
                 
             } done: {}
-
             
-        }
-        
-        func distance(from pointA: CGPoint, to pointB: CGPoint) -> CGFloat {
-            sqrt(pow(pointA.x - pointB.x, 2.0) + pow(pointA.y - pointB.y, 2.0))
-        }
-        
-        func hitTestFrameContentIndex(at location: CGPoint) -> Int? {
-            let absoluteLocation: CGPoint = canvasCoordinate.absolute(location: location)
-            for (index, frameContent) in frameContentList.enumerated() {
-                let frame: CGRect = frameContent.frame
-                switch frameContent.shape {
-                case .rectangle:
-                    if frame.contains(absoluteLocation) {
-                        return index
-                    }
-                case .circle:
-                    let center: CGPoint = frame.origin + frame.size / 2
-                    let distance: CGFloat = sqrt(pow(center.x - absoluteLocation.x, 2.0) + pow(center.y - absoluteLocation.y, 2.0))
-                    let radius: CGFloat = min(frame.size.width, frame.size.height) / 2.0
-                    if distance < radius {
-                        return index
-                    }
-                }
-            }
-            return nil
         }
         
         // MARK: - Pan
@@ -348,11 +348,18 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             canvasScale *= relativeScale
 
             let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
-            let averageLocationOffset: CGPoint = averageLocation - canvasOffset
-            let scaledAverageLocationOffset: CGPoint = averageLocationOffset * relativeScale
-            let relativeScaleOffset: CGPoint = averageLocationOffset - scaledAverageLocationOffset
             
-            canvasOffset += relativeScaleOffset
+            canvasOffset += scaleOffset(relativeScale: relativeScale, at: averageLocation)
+            
+        }
+        
+        func scaleOffset(relativeScale: CGFloat, at location: CGPoint) -> CGPoint {
+            
+            let locationOffset: CGPoint = location - canvasOffset
+            let scaledAverageLocationOffset: CGPoint = locationOffset * relativeScale
+            let relativeScaleOffset: CGPoint = locationOffset - scaledAverageLocationOffset
+            
+            return relativeScaleOffset
             
         }
         
@@ -445,6 +452,33 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                     t.invalidate()
                 }
             }), forMode: .common)
+        }
+        
+        // MARK: - Helpers
+        
+        func distance(from pointA: CGPoint, to pointB: CGPoint) -> CGFloat {
+            sqrt(pow(pointA.x - pointB.x, 2.0) + pow(pointA.y - pointB.y, 2.0))
+        }
+        
+        func hitTestFrameContentIndex(at location: CGPoint) -> Int? {
+            let absoluteLocation: CGPoint = canvasCoordinate.absolute(location: location)
+            for (index, frameContent) in frameContentList.enumerated() {
+                let frame: CGRect = frameContent.frame
+                switch frameContent.shape {
+                case .rectangle:
+                    if frame.contains(absoluteLocation) {
+                        return index
+                    }
+                case .circle:
+                    let center: CGPoint = frame.origin + frame.size / 2
+                    let distance: CGFloat = sqrt(pow(center.x - absoluteLocation.x, 2.0) + pow(center.y - absoluteLocation.y, 2.0))
+                    let radius: CGFloat = min(frame.size.width, frame.size.height) / 2.0
+                    if distance < radius {
+                        return index
+                    }
+                }
+            }
+            return nil
         }
         
     }

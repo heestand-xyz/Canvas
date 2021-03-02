@@ -5,18 +5,38 @@ import CoreGraphicsExtensions
 class CanvasInteractView: MPView {
     
     @Binding var canvasInteractions: [CanvasInteraction]
+    @Binding var canvasKeyboardKeys: Set<CanvasKeyboardKey>
+    @Binding var canvasMouseLocation: CGPoint?
     var didMoveCanvasInteractions: ([CanvasInteraction]) -> ()
+    var didScroll: (CGVector) -> ()
 
     init(canvasInteractions: Binding<[CanvasInteraction]>,
-         didMoveCanvasInteractions: @escaping ([CanvasInteraction]) -> ()) {
+         canvasKeyboardKeys: Binding<Set<CanvasKeyboardKey>>,
+         canvasMouseLocation: Binding<CGPoint?>,
+         didMoveCanvasInteractions: @escaping ([CanvasInteraction]) -> (),
+         didScroll: @escaping (CGVector) -> ()) {
         
         _canvasInteractions = canvasInteractions
+        _canvasKeyboardKeys = canvasKeyboardKeys
+        _canvasMouseLocation = canvasMouseLocation
         self.didMoveCanvasInteractions = didMoveCanvasInteractions
+        self.didScroll = didScroll
         
         super.init(frame: .zero)
         
         #if os(iOS)
         isMultipleTouchEnabled = true
+        #endif
+        
+        #if os(macOS)
+        NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) {
+            self.flagsChanged(with: $0)
+            return $0
+        }
+        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) {
+            self.mouseMoved(with: $0)
+            return $0
+        }
         #endif
         
     }
@@ -71,13 +91,17 @@ class CanvasInteractView: MPView {
     
     #if os(macOS)
     override func mouseDown(with event: NSEvent) {
-        guard let location: CGPoint = getMouseLocation(event: event) else { return }
+        let location: CGPoint = getMouseLocation(event: event)
         let id = UUID()
         let canvasInteraction = CanvasInteraction(id: id, location: location)
         canvasInteractions.append(canvasInteraction)
     }
+    override func mouseUp(with event: NSEvent) {
+        guard let canvasInteraction: CanvasInteraction = canvasInteractions.first else { return }
+        canvasInteraction.active = false
+    }
     override func mouseDragged(with event: NSEvent) {
-        guard let location: CGPoint = getMouseLocation(event: event) else { return }
+        let location: CGPoint = getMouseLocation(event: event)
         guard let canvasInteraction: CanvasInteraction = canvasInteractions.first else { return }
         let lastLocation: CGPoint = canvasInteraction.location
         canvasInteraction.location = location
@@ -86,18 +110,43 @@ class CanvasInteractView: MPView {
         canvasInteraction.velocity = velocity
         didMoveCanvasInteractions([canvasInteraction])
     }
-    override func mouseUp(with event: NSEvent) {
-        guard let canvasInteraction: CanvasInteraction = canvasInteractions.first else { return }
-        canvasInteraction.active = false
+    override func mouseMoved(with event: NSEvent) {
+        canvasMouseLocation = getMouseLocation(event: event)
     }
-    func getMouseLocation(event: NSEvent) -> CGPoint? {
-        let mouseLocation: CGPoint = event.locationInWindow
-        guard let vcView: NSView = window?.contentViewController?.view else { return nil }
+    func getMouseLocation(event: NSEvent) -> CGPoint {
+        guard let window: NSWindow = window else { return .zero }
+        let mouseLocation: CGPoint = window.mouseLocationOutsideOfEventStream
+        guard let vcView: NSView = window.contentViewController?.view else { return .zero }
         let point: CGPoint = convert(.zero, to: vcView)
         let origin: CGPoint = CGPoint(x: point.x, y: vcView.bounds.size.height - point.y)
         let location: CGPoint = mouseLocation - origin
         let flippedLocation: CGPoint = CGPoint(x: location.x, y: bounds.size.height - location.y)
         return flippedLocation
+    }
+    #endif
+    
+    #if os(macOS)
+    override func scrollWheel(with event: NSEvent) {
+        didScroll(CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY))
+    }
+    #endif
+    
+    #if os(macOS)
+    override func flagsChanged(with event: NSEvent) {
+        var keyboardKeys: Set<CanvasKeyboardKey> = []
+        switch event.modifierFlags.intersection(.deviceIndependentFlagsMask) {
+        case .command:
+            keyboardKeys.insert(.command)
+        case .control:
+            keyboardKeys.insert(.control)
+        case .shift:
+            keyboardKeys.insert(.shift)
+        case .option:
+            keyboardKeys.insert(.option)
+        default:
+            break
+        }
+        canvasKeyboardKeys = keyboardKeys
     }
     #endif
     

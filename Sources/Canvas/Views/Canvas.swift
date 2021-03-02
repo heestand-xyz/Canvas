@@ -47,22 +47,23 @@ public struct Canvas<BackgroundContent: View, FrontContent: View, BackContent: V
                         .canvasFrame(content: frameContent, scale: canvasScale)
                 }
             }
+            .frame(width: 1, height: 1, alignment: .topLeading) /// No Scale Hack
             .canvasCoordinateRotationOffset(canvasCoordinate)
             
             // Touches
-            #if DEBUG
-            ForEach(canvasInteractions) { interaction in
-                Circle()
-                    .foregroundColor((interaction == canvasPanInteraction) ? .blue :
-                                        (interaction == canvasPinchInteraction?.0 ||
-                                            interaction == canvasPinchInteraction?.1) ? .purple :
-                                        canvasDragInteractions.contains(where: { $0.value == interaction }) ? .orange : .primary)
-                    .opacity(interaction.active ? 1.0 : 0.25)
-                    .frame(width: 50, height: 50)
-                    .offset(x: interaction.location.x - 25,
-                            y: interaction.location.y - 25)
-            }
-            #endif
+//            #if DEBUG
+//            ForEach(canvasInteractions) { interaction in
+//                Circle()
+//                    .foregroundColor((interaction == canvasPanInteraction) ? .blue :
+//                                        (interaction == canvasPinchInteraction?.0 ||
+//                                            interaction == canvasPinchInteraction?.1) ? .purple :
+//                                        canvasDragInteractions.contains(where: { $0.value == interaction }) ? .orange : .primary)
+//                    .opacity(interaction.active ? 1.0 : 0.25)
+//                    .frame(width: 50, height: 50)
+//                    .offset(x: interaction.location.x - 25,
+//                            y: interaction.location.y - 25)
+//            }
+//            #endif
             
             // Interact
             CanvasInteractViewRepresentable(snapAngle: snapAngle,
@@ -83,6 +84,7 @@ public struct Canvas<BackgroundContent: View, FrontContent: View, BackContent: V
                         .canvasFrame(content: frameContent, scale: canvasScale)
                 }
             }
+            .frame(width: 1, height: 1, alignment: .topLeading) /// No Scale Hack
             .canvasCoordinateRotationOffset(canvasCoordinate)
             
         }
