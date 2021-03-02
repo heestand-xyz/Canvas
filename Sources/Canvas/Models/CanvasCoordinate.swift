@@ -10,18 +10,31 @@ public struct CanvasCoordinate {
 
 public extension CanvasCoordinate {
     var rotatedOffset: CGPoint {
-        var angle: Angle = Angle(radians: Double(atan2(offset.y, offset.x)))
-        angle -= self.angle
-        let radius: CGFloat = sqrt(pow(offset.x, 2.0) + pow(offset.y, 2.0))
-        return CGPoint(x: cos(CGFloat(angle.radians)) * radius,
-                       y: sin(CGFloat(angle.radians)) * radius)
+        rotate(offset, by: -angle)
     }
 }
 
 public extension CanvasCoordinate {
     /// Converts from screen space to content space
     func absolute(location: CGPoint) -> CGPoint {
-        (rotatedOffset + location) * scale
+        rotate((location - offset) / scale, by: -angle)
+    }
+    /// Converts from content space to screen space
+    func relative(position: CGPoint) -> CGPoint {
+        rotate(position, by: angle) * scale + offset
+    }
+    func scaleRotate(_ location: CGPoint) -> CGPoint {
+        rotate(location, by: -angle) / scale
+    }
+}
+
+public extension CanvasCoordinate {
+    func rotate(_ point: CGPoint, by rotation: Angle) -> CGPoint {
+        var angle: Angle = Angle(radians: Double(atan2(point.y, point.x)))
+        angle += rotation
+        let radius: CGFloat = sqrt(pow(point.x, 2.0) + pow(point.y, 2.0))
+        return CGPoint(x: cos(CGFloat(angle.radians)) * radius,
+                       y: sin(CGFloat(angle.radians)) * radius)
     }
 }
 

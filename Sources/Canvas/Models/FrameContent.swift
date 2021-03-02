@@ -30,3 +30,14 @@ public struct CanvasFrameContent<FontContent: View, BackContent: View>: Identifi
     }
     
 }
+
+extension View {
+    
+    func canvasFrame<FC: View, BC: View>(content frameContent: CanvasFrameContent<FC, BC>, scale: CGFloat) -> some View {
+        self.frame(width: frameContent.frame.width * scale,
+                   height: frameContent.frame.height * scale)
+            .offset(x: frameContent.frame.origin.x * scale,
+                    y: frameContent.frame.origin.y * scale)
+    }
+    
+}

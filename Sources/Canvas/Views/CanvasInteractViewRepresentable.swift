@@ -16,6 +16,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
     @Binding var canvasInteractions: [CanvasInteraction]
     @Binding var canvasPanInteraction: CanvasInteraction?
     @Binding var canvasPinchInteraction: (CanvasInteraction, CanvasInteraction)?
+    @Binding var canvasDragInteractions: [UUID: CanvasInteraction]
 
     func makeView(context: Context) -> CanvasInteractView {
         CanvasInteractView(canvasInteractions: $canvasInteractions,
@@ -32,7 +33,8 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                     canvasAngle: $canvasAngle,
                     canvasInteractions: $canvasInteractions,
                     canvasPanInteraction: $canvasPanInteraction,
-                    canvasPinchInteraction: $canvasPinchInteraction)
+                    canvasPinchInteraction: $canvasPinchInteraction,
+                    canvasDragInteractions: $canvasDragInteractions)
     }
     
     class Coordinator<FrontContent: View, BackContent: View> {
@@ -58,6 +60,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
         @Binding var canvasInteractions: [CanvasInteraction]
         @Binding var canvasPanInteraction: CanvasInteraction?
         @Binding var canvasPinchInteraction: (CanvasInteraction, CanvasInteraction)?
+        @Binding var canvasDragInteractions: [UUID: CanvasInteraction]
 
         #if os(iOS)
         var displayLink: CADisplayLink!
@@ -70,7 +73,8 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
              canvasAngle: Binding<Angle>,
              canvasInteractions: Binding<[CanvasInteraction]>,
              canvasPanInteraction: Binding<CanvasInteraction?>,
-             canvasPinchInteraction: Binding<(CanvasInteraction, CanvasInteraction)?>) {
+             canvasPinchInteraction: Binding<(CanvasInteraction, CanvasInteraction)?>,
+             canvasDragInteractions: Binding<[UUID: CanvasInteraction]>) {
             
             self.snapAngle = snapAngle
             _frameContentList = frameContentList
@@ -80,6 +84,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             _canvasInteractions = canvasInteractions
             _canvasPanInteraction = canvasPanInteraction
             _canvasPinchInteraction = canvasPinchInteraction
+            _canvasDragInteractions = canvasDragInteractions
             
             #if os(iOS)
             displayLink = CADisplayLink(target: self, selector: #selector(frameLoop))
@@ -118,39 +123,59 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 }
                 
             }
+            
+            /// Drag
+            let filteredPotentialDragInteractions: [CanvasInteraction] = canvasInteractions.filter { interaction in
+                interaction.active && interaction != canvasPanInteraction && interaction != canvasPinchInteraction?.0 && interaction != canvasPinchInteraction?.1
+            }
+            for (id, dragInteraction) in canvasDragInteractions {
+                let isInteracting: Bool = filteredPotentialDragInteractions.contains(dragInteraction)
+                if !isInteracting {
+                    canvasDragInteractions.removeValue(forKey: id)
+                }
+            }
+            for interaction in filteredPotentialDragInteractions {
+                guard let index: Int = hitTestFrameContentIndex(at: interaction.location) else { continue }
+                let id: UUID = frameContentList[index].id
+                guard !canvasDragInteractions.contains(where: { $0.key == id }) else { return }
+                canvasDragInteractions[id] = interaction
+            }
               
             /// Pinch
+            let filteredPotentialPinchInteractions: [CanvasInteraction] = canvasInteractions.filter { interaction in
+                interaction.active && !canvasDragInteractions.contains(where: { $0.value == interaction })
+            }
             if let pinchInteraction: (CanvasInteraction, CanvasInteraction) = canvasPinchInteraction {
-                let isInteracting: Bool = canvasInteractions.filter(\.active).contains(pinchInteraction.0) && canvasInteractions.filter(\.active).contains(pinchInteraction.1)
+                let isInteracting: Bool = filteredPotentialPinchInteractions.contains(pinchInteraction.0) && filteredPotentialPinchInteractions.contains(pinchInteraction.1)
                 if !isInteracting {
                     pinchDone(pinchInteraction)
                     canvasPinchInteraction = nil
                 }
             }
             if canvasPinchInteraction == nil {
-                let activeCanvasInteractions: [CanvasInteraction] = canvasInteractions.filter(\.active)
-                if activeCanvasInteractions.count >= 2 {
-                    canvasPinchInteraction = (activeCanvasInteractions[0], activeCanvasInteractions[1])
+                if filteredPotentialPinchInteractions.count >= 2 {
+                    canvasPinchInteraction = (filteredPotentialPinchInteractions[0], filteredPotentialPinchInteractions[1])
                     canvasPanInteraction = nil
                 }
             }
             
             /// Pan
+            let filteredPotentialPanInteractions: [CanvasInteraction] = canvasInteractions.filter { interaction in
+                interaction.active && !canvasDragInteractions.contains(where: { $0.value == interaction })
+            }
             if let panInteraction: CanvasInteraction = canvasPanInteraction {
                 let isInteracting: Bool = canvasInteractions.contains(panInteraction)
                 if !isInteracting {
                     canvasPanInteraction = nil
                 } else if !panInteraction.active {
-                    let activeCanvasInteractions: [CanvasInteraction] = canvasInteractions.filter(\.active)
-                    if activeCanvasInteractions.count == 1 {
+                    if filteredPotentialPanInteractions.count == 1 {
                         canvasPanInteraction = nil
                     }
                 }
             }
-            if canvasPanInteraction == nil{
-                let activeCanvasInteractions: [CanvasInteraction] = canvasInteractions.filter(\.active)
-                if activeCanvasInteractions.count == 1 {
-                    canvasPanInteraction = activeCanvasInteractions[0]
+            if canvasPanInteraction == nil && canvasPinchInteraction == nil {
+                if filteredPotentialPanInteractions.count == 1 {
+                    canvasPanInteraction = filteredPotentialPanInteractions[0]
                 }
             }
             
@@ -165,6 +190,12 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                panInteraction.auto {
                 pan()
             }
+            
+//            /// Drag
+//            for (id, interaction) in canvasDragInteractions {
+//                guard interaction.auto else { continue }
+//                drag(id: id, interaction: interaction)
+//            }
             
         }
         
@@ -183,23 +214,23 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 pinch()
             }
             
+            /// Drag
+            for (id, interaction) in canvasDragInteractions {
+                guard interaction.active else { continue }
+                guard canvasInteractions.contains(interaction) else { continue }
+                drag(id: id, interaction: interaction)
+            }
+            
         }
         
-        // MARK: - Pan
+        // MARK: - Drag
         
-        func pan() {
+        func drag(id: UUID, interaction: CanvasInteraction) {
             
-            guard let panInteraction: CanvasInteraction = canvasPanInteraction else { return }
-            
-            if let frameContentIndex: Int = hitTestFrameContentIndex(at: panInteraction.location) {
+            guard let index: Int = frameContentList.firstIndex(where: { $0.id == id }) else { return }
 
-                // ...
-                
-            } else {
-
-                canvasOffset += panInteraction.velocity
-                
-            }
+            frameContentList[index].frame.origin += canvasCoordinate
+                .scaleRotate(CGPoint(x: interaction.velocity.dx, y: interaction.velocity.dy))
             
         }
         
@@ -222,6 +253,16 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 }
             }
             return nil
+        }
+        
+        // MARK: - Pan
+        
+        func pan() {
+            
+            guard let panInteraction: CanvasInteraction = canvasPanInteraction else { return }
+            
+            canvasOffset += panInteraction.velocity
+            
         }
         
         // MARK: - Pinch

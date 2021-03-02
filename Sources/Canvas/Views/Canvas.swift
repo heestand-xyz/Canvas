@@ -28,6 +28,7 @@ public struct Canvas<BackgroundContent: View, FrontContent: View, BackContent: V
     @State var canvasInteractions: [CanvasInteraction] = []
     @State var canvasPanInteraction: CanvasInteraction? = nil
     @State var canvasPinchInteraction: (CanvasInteraction, CanvasInteraction)? = nil
+    @State var canvasDragInteractions: [UUID: CanvasInteraction] = [:]
     
     public var body: some View {
         
@@ -36,31 +37,29 @@ public struct Canvas<BackgroundContent: View, FrontContent: View, BackContent: V
             // Background
             backgroundContent(canvasCoordinate)
             
-            // Touches
-            #if DEBUG
-            ForEach(canvasInteractions) { canvasInteraction in
-                Circle()
-                    .foregroundColor((canvasInteraction == canvasPanInteraction) ? .blue :
-                                        (canvasInteraction == canvasPinchInteraction?.0 ||
-                                            canvasInteraction == canvasPinchInteraction?.1) ? .purple : .primary)
-                    .opacity(canvasInteraction.active ? 1.0 : 0.25)
-                    .frame(width: 50, height: 50)
-                    .offset(x: canvasInteraction.location.x - 25,
-                            y: canvasInteraction.location.y - 25)
-            }
-            #endif
-            
             // Back
             ZStack(alignment: .topLeading) {
                 ForEach(frameContentList) { frameContent in
                     frameContent.backContent(canvasCoordinate)
-                        .frame(width: frameContent.canvasFrame.width * canvasScale,
-                               height: frameContent.canvasFrame.height * canvasScale)
-                        .offset(x: frameContent.canvasFrame.origin.x * canvasScale,
-                                y: frameContent.canvasFrame.origin.y * canvasScale)
+                        .canvasFrame(content: frameContent, scale: canvasScale)
                 }
             }
             .canvasCoordinateRotationOffset(canvasCoordinate)
+            
+            // Touches
+            #if DEBUG
+            ForEach(canvasInteractions) { interaction in
+                Circle()
+                    .foregroundColor((interaction == canvasPanInteraction) ? .blue :
+                                        (interaction == canvasPinchInteraction?.0 ||
+                                            interaction == canvasPinchInteraction?.1) ? .purple :
+                                        canvasDragInteractions.contains(where: { $0.value == interaction }) ? .orange : .primary)
+                    .opacity(interaction.active ? 1.0 : 0.25)
+                    .frame(width: 50, height: 50)
+                    .offset(x: interaction.location.x - 25,
+                            y: interaction.location.y - 25)
+            }
+            #endif
             
             // Interact
             CanvasInteractViewRepresentable(snapAngle: snapAngle,
@@ -70,16 +69,14 @@ public struct Canvas<BackgroundContent: View, FrontContent: View, BackContent: V
                                             canvasAngle: $canvasAngle,
                                             canvasInteractions: $canvasInteractions,
                                             canvasPanInteraction: $canvasPanInteraction,
-                                            canvasPinchInteraction: $canvasPinchInteraction)
+                                            canvasPinchInteraction: $canvasPinchInteraction,
+                                            canvasDragInteractions: $canvasDragInteractions)
             
             // Front
             ZStack(alignment: .topLeading) {
                 ForEach(frameContentList) { frameContent in
                     frameContent.frontContent(canvasCoordinate)
-                        .frame(width: frameContent.canvasFrame.width * canvasScale,
-                               height: frameContent.canvasFrame.height * canvasScale)
-                        .offset(x: frameContent.canvasFrame.origin.x * canvasScale,
-                                y: frameContent.canvasFrame.origin.y * canvasScale)
+                        .canvasFrame(content: frameContent, scale: canvasScale)
                 }
             }
             .canvasCoordinateRotationOffset(canvasCoordinate)
