@@ -6,6 +6,7 @@ import CoreGraphicsExtensions
 struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: ViewRepresentable {
 
     let snapAngle: Angle?
+    let snapGrid: CanvasSnapGrid?
 
     @Binding var frameContentList: [CanvasFrameContent<FrontContent, BackContent>]
     
@@ -27,6 +28,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
     
     func makeCoordinator() -> Coordinator<FrontContent, BackContent> {
         Coordinator(snapAngle: snapAngle,
+                    snapGrid: snapGrid,
                     frameContentList: $frameContentList,
                     canvasOffset: $canvasOffset,
                     canvasScale: $canvasScale,
@@ -43,9 +45,10 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
         let velocityDampening: CGFloat = 0.98
         let velocityRadiusThreshold: CGFloat = 0.02
         let snapAngleRadius: Angle = Angle(degrees: 5)
-        
-        let snapAngle: Angle?
 
+        let snapAngle: Angle?
+        let snapGrid: CanvasSnapGrid?
+        
         @Binding var frameContentList: [CanvasFrameContent<FrontContent, BackContent>]
 
         @Binding var canvasOffset: CGPoint
@@ -67,6 +70,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
         #endif
         
         init(snapAngle: Angle?,
+             snapGrid: CanvasSnapGrid?,
              frameContentList: Binding<[CanvasFrameContent<FrontContent, BackContent>]>,
              canvasOffset: Binding<CGPoint>,
              canvasScale: Binding<CGFloat>,
@@ -77,6 +81,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
              canvasDragInteractions: Binding<[UUID: CanvasInteraction]>) {
             
             self.snapAngle = snapAngle
+            self.snapGrid = snapGrid
             _frameContentList = frameContentList
             _canvasOffset = canvasOffset
             _canvasScale = canvasScale
@@ -131,6 +136,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             for (id, dragInteraction) in canvasDragInteractions {
                 let isInteracting: Bool = filteredPotentialDragInteractions.contains(dragInteraction)
                 if !isInteracting {
+                    dragDone(id: id, interaction: dragInteraction)
                     canvasDragInteractions.removeValue(forKey: id)
                 }
             }
@@ -232,6 +238,50 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             frameContentList[index].frame.origin += canvasCoordinate
                 .scaleRotate(CGPoint(x: interaction.velocity.dx, y: interaction.velocity.dy))
             
+        }
+        
+        func dragDone(id: UUID, interaction: CanvasInteraction) {
+            snapToGrid(id: id, interaction: interaction)
+        }
+
+        func snapToGrid(id: UUID, interaction: CanvasInteraction) {
+
+            guard let index: Int = frameContentList.firstIndex(where: { $0.id == id }) else { return }
+            let frameContent: CanvasFrameContent = frameContentList[index]
+
+            guard let snapGrid: CanvasSnapGrid = snapGrid else { return }
+            
+            let position: CGPoint = frameContent.center
+            let snapPosition: CGPoint
+            switch snapGrid {
+            case .square(size: let size):
+                snapPosition = CGPoint(x: round(position.x / size) * size,
+                                       y: round(position.y / size) * size)
+            case .triangle(size: let size):
+                let width: CGFloat = size / sqrt(0.75)
+                let height: CGFloat = size
+                let snapPositionA = CGPoint(x: round(position.x / width) * width,
+                                            y: round(position.y / (height * 2)) * (height * 2))
+                let snapPositionB = CGPoint(x: round((position.x - width / 2) / width) * width + (width / 2),
+                                            y: round((position.y - height) / (height * 2)) * (height * 2) + height)
+                if distance(from: snapPositionA, to: position) < distance(from: snapPositionB, to: position) {
+                    snapPosition = snapPositionA
+                } else {
+                    snapPosition = snapPositionB
+                }
+            }
+            
+            animate(for: 0.25, ease: .easeOut) { fraction in
+                
+                self.frameContentList[index].center = position * (1.0 - fraction) + snapPosition * fraction
+                
+            } done: {}
+
+            
+        }
+        
+        func distance(from pointA: CGPoint, to pointB: CGPoint) -> CGFloat {
+            sqrt(pow(pointA.x - pointB.x, 2.0) + pow(pointA.y - pointB.y, 2.0))
         }
         
         func hitTestFrameContentIndex(at location: CGPoint) -> Int? {

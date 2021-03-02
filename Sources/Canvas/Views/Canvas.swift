@@ -3,15 +3,18 @@ import SwiftUI
 public struct Canvas<BackgroundContent: View, FrontContent: View, BackContent: View>: View {
     
     let snapAngle: Angle?
+    let snapGrid: CanvasSnapGrid?
     
     let backgroundContent: (CanvasCoordinate) -> (BackgroundContent)
     
     @Binding var frameContentList: [CanvasFrameContent<FrontContent, BackContent>]
     
-    public init(snapAngle: Angle? = Angle(degrees: 90.0),
+    public init(snapAngle: Angle? = nil,
+                snapGrid: CanvasSnapGrid? = nil,
                 frameContentList: Binding<[CanvasFrameContent<FrontContent, BackContent>]>,
                 background: @escaping (CanvasCoordinate) -> (BackgroundContent)) {
         self.snapAngle = snapAngle
+        self.snapGrid = snapGrid
         _frameContentList = frameContentList
         backgroundContent = background
     }
@@ -63,6 +66,7 @@ public struct Canvas<BackgroundContent: View, FrontContent: View, BackContent: V
             
             // Interact
             CanvasInteractViewRepresentable(snapAngle: snapAngle,
+                                            snapGrid: snapGrid,
                                             frameContentList: $frameContentList,
                                             canvasOffset: $canvasOffset,
                                             canvasScale: $canvasScale,

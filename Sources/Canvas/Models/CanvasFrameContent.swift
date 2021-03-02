@@ -1,5 +1,6 @@
 import Foundation
 import CoreGraphics
+import CoreGraphicsExtensions
 import SwiftUI
 
 public struct CanvasFrameContent<FontContent: View, BackContent: View>: Identifiable {
@@ -7,6 +8,10 @@ public struct CanvasFrameContent<FontContent: View, BackContent: View>: Identifi
     public let id: UUID
     
     var frame: CGRect
+    var center: CGPoint {
+        get { frame.origin + frame.size / 2.0 }
+        set { frame.origin = newValue - frame.size / 2.0 }
+    }
     
     let frontContent: (CanvasCoordinate) -> (FontContent)
     let backContent: (CanvasCoordinate) -> (BackContent)
