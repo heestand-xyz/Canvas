@@ -19,6 +19,13 @@ public extension CanvasCoordinate {
 }
 
 public extension CanvasCoordinate {
+    /// Converts from screen space to content space
+    func absolute(location: CGPoint) -> CGPoint {
+        (rotatedOffset + location) * scale
+    }
+}
+
+public extension CanvasCoordinate {
     static let zero: CanvasCoordinate = CanvasCoordinate(offset: .zero, scale: 1.0, angle: .zero)
 }
 

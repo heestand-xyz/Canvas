@@ -1,12 +1,17 @@
 import SwiftUI
 
-public struct Canvas<GridContent: View, Content: View>: View {
+public struct Canvas<BackgroundContent: View, FrontContent: View, BackContent: View>: View {
     
-    let backgroundContent: (CanvasCoordinate) -> (GridContent)
-    @Binding var frameContentList: [FrameContent<Content>]
+    let snapAngle: Angle?
     
-    public init(frameContentList: Binding<[FrameContent<Content>]>,
-                background: @escaping (CanvasCoordinate) -> (GridContent)) {
+    let backgroundContent: (CanvasCoordinate) -> (BackgroundContent)
+    
+    @Binding var frameContentList: [CanvasFrameContent<FrontContent, BackContent>]
+    
+    public init(snapAngle: Angle? = Angle(degrees: 90.0),
+                frameContentList: Binding<[CanvasFrameContent<FrontContent, BackContent>]>,
+                background: @escaping (CanvasCoordinate) -> (BackgroundContent)) {
+        self.snapAngle = snapAngle
         _frameContentList = frameContentList
         backgroundContent = background
     }
@@ -28,8 +33,10 @@ public struct Canvas<GridContent: View, Content: View>: View {
         
         ZStack(alignment: .topLeading) {
             
+            // Background
             backgroundContent(canvasCoordinate)
             
+            // Touches
             #if DEBUG
             ForEach(canvasInteractions) { canvasInteraction in
                 Circle()
@@ -43,24 +50,37 @@ public struct Canvas<GridContent: View, Content: View>: View {
             }
             #endif
             
-            CanvasInteractViewRepresentable(canvasOffset: $canvasOffset,
+            // Back
+            ZStack(alignment: .topLeading) {
+                ForEach(frameContentList) { frameContent in
+                    frameContent.backContent(canvasCoordinate)
+                        .frame(width: frameContent.canvasFrame.width * canvasScale,
+                               height: frameContent.canvasFrame.height * canvasScale)
+                        .offset(x: frameContent.canvasFrame.origin.x * canvasScale,
+                                y: frameContent.canvasFrame.origin.y * canvasScale)
+                }
+            }
+            .canvasCoordinateRotationOffset(canvasCoordinate)
+            
+            // Interact
+            CanvasInteractViewRepresentable(snapAngle: snapAngle,
+                                            frameContentList: $frameContentList,
+                                            canvasOffset: $canvasOffset,
                                             canvasScale: $canvasScale,
                                             canvasAngle: $canvasAngle,
                                             canvasInteractions: $canvasInteractions,
                                             canvasPanInteraction: $canvasPanInteraction,
                                             canvasPinchInteraction: $canvasPinchInteraction)
             
+            // Front
             ZStack(alignment: .topLeading) {
-                
                 ForEach(frameContentList) { frameContent in
-                    frameContent.content(canvasCoordinate)
+                    frameContent.frontContent(canvasCoordinate)
                         .frame(width: frameContent.canvasFrame.width * canvasScale,
                                height: frameContent.canvasFrame.height * canvasScale)
-                        .border(Color.red)
                         .offset(x: frameContent.canvasFrame.origin.x * canvasScale,
                                 y: frameContent.canvasFrame.origin.y * canvasScale)
                 }
-    
             }
             .canvasCoordinateRotationOffset(canvasCoordinate)
             
