@@ -1,22 +1,25 @@
 import SwiftUI
 
-public struct Canvas<BackgroundContent: View, FrontContent: View, BackContent: View>: View {
+public struct Canvas<BackgroundContent: View, MiddleContent: View, FrontContent: View, BackContent: View>: View {
     
     let snapAngle: Angle?
     let snapGrid: CanvasSnapGrid?
     
     let backgroundContent: (CanvasCoordinate) -> (BackgroundContent)
-    
+    let middleContent: (CanvasCoordinate) -> (MiddleContent)
+
     @Binding var frameContentList: [CanvasFrameContent<FrontContent, BackContent>]
     
     public init(snapAngle: Angle? = nil,
                 snapGrid: CanvasSnapGrid? = nil,
                 frameContentList: Binding<[CanvasFrameContent<FrontContent, BackContent>]>,
+                middle: @escaping (CanvasCoordinate) -> (MiddleContent),
                 background: @escaping (CanvasCoordinate) -> (BackgroundContent)) {
         self.snapAngle = snapAngle
         self.snapGrid = snapGrid
         _frameContentList = frameContentList
         backgroundContent = background
+        middleContent = middle
     }
     
     @State var canvasOffset: CGPoint = .zero
@@ -49,6 +52,8 @@ public struct Canvas<BackgroundContent: View, FrontContent: View, BackContent: V
             }
             .frame(width: 1, height: 1, alignment: .topLeading) /// No Scale Hack
             .canvasCoordinateRotationOffset(canvasCoordinate)
+            
+            middleContent(canvasCoordinate)
             
             // Touches
 //            #if DEBUG

@@ -53,6 +53,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
         let velocityDampening: CGFloat = 0.98
         let velocityRadiusThreshold: CGFloat = 0.02
         let snapAngleRadius: Angle = Angle(degrees: 5)
+        let isOnGridRadiusThreshold: CGFloat = 0.2
 
         let snapAngle: Angle?
         let snapGrid: CanvasSnapGrid?
@@ -166,7 +167,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             
             /// Drag
             let filteredPotentialDragInteractions: [CanvasInteraction] = canvasInteractions.filter { interaction in
-                interaction.active && interaction != canvasPanInteraction && interaction != canvasPinchInteraction?.0 && interaction != canvasPinchInteraction?.1
+                interaction != canvasPanInteraction && interaction != canvasPinchInteraction?.0 && interaction != canvasPinchInteraction?.1
             }
             for (id, dragInteraction) in canvasDragInteractions {
                 #if os(iOS)
@@ -183,15 +184,10 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 #endif
             }
             for interaction in filteredPotentialDragInteractions {
-                guard let index: Int = hitTestFrameContentIndex(at: interaction.location) else { continue }
-                let id: UUID = frameContentList[index].id
-                guard !canvasDragInteractions.contains(where: { $0.key == id }) else { return }
-//                if let oldIndex: Int = canvasDragInteractions.first(where: { (dragID, dragInteraction) in
-//                    dragInteraction.auto && id == dragID
-//                }) {
-//                    canvasDragInteractions.removeValue(forKey: id)
-//                }
-                canvasDragInteractions[id] = interaction
+                guard let hitTestIndex: Int = hitTestFrameContentIndex(at: interaction.location) else { continue }
+                let hitTestID: UUID = frameContentList[hitTestIndex].id
+                guard !canvasDragInteractions.filter({ $0.value.active }).contains(where: { $0.key == hitTestID }) else { continue }
+                canvasDragInteractions[hitTestID] = interaction
             }
               
             /// Pinch
@@ -275,9 +271,9 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 guard let mouseLocation: CGPoint = canvasMouseLocation else { return }
                 let relativeScale: CGFloat = 1.0 + velocity.dy * 0.0025
                 canvasScale *= relativeScale
-                canvasOffset += scaleOffset(relativeScale: relativeScale, at: mouseLocation)
+                offsetCanvas(by: scaleOffset(relativeScale: relativeScale, at: mouseLocation).vector)
             } else {
-                canvasOffset += velocity
+                offsetCanvas(by: velocity)
             }
         }
         
@@ -286,6 +282,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
         func drag(id: UUID, interaction: CanvasInteraction) {
             
             guard let index: Int = frameContentList.firstIndex(where: { $0.id == id }) else { return }
+            let frameContent: CanvasFrameContent = frameContentList[index]
 
             if interaction.auto,
                interaction.predictedEndLocation == nil,
@@ -297,8 +294,31 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 
             }
             
-            frameContentList[index].frame.origin += canvasCoordinate.scaleRotate(interaction.velocity)
+            if interaction.contentCenterOffset == nil {
+                interaction.contentCenterOffset = (canvasCoordinate.absolute(location: interaction.location) - frameContent.center).vector
+            }
             
+            let offset: CGVector = canvasCoordinate.scaleRotate(interaction.velocity)
+            if isNaN(offset.dx) || isNaN(offset.dy) {
+                fatalError("NaNaN")
+            }
+            frameContentList[index].frame.origin += offset
+            
+        }
+        
+        func absoluteDrag(id: UUID, interaction: CanvasInteraction) {
+
+            guard interaction.active else { return }
+            guard let contentCenterOffset: CGVector = interaction.contentCenterOffset else { return }
+
+            guard let index: Int = frameContentList.firstIndex(where: { $0.id == id }) else { return }
+            
+            let center: CGPoint = canvasCoordinate.absolute(location: interaction.location) - contentCenterOffset
+            if isNaN(center.x) || isNaN(center.y) {
+                fatalError("NaNaN")
+            }
+            frameContentList[index].center = center
+
         }
         
         func predictSnapPack(id: UUID, interaction: CanvasInteraction, snapGrid: CanvasSnapGrid) -> (CGPoint, CGVector) {
@@ -321,6 +341,9 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             let predictedDifference: CGPoint = canvasCoordinate.relative(position: predictedPosition) - canvasCoordinate.relative(position: position)
             let predictedSnapDifference: CGPoint = canvasCoordinate.relative(position: predictedSnapPosition) - canvasCoordinate.relative(position: position)
             let difference: CGPoint = predictedSnapDifference / predictedDifference
+            if predictedDifference.x == 0.0 || predictedDifference.y == 0.0 {
+                fatalError("Zer0: \(difference)")
+            }
             
             let predictedSnapVelocity: CGVector = velocity * difference
             
@@ -343,8 +366,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             let snapPosition: CGPoint = snapToGridPosition(around: position, snapGrid: snapGrid)
             let difference: CGPoint = snapPosition - position
             let distance: CGFloat = sqrt(pow(difference.x, 2.0) + pow(difference.y, 2.0))
-            print(distance)
-            return distance < 0.2
+            return distance < isOnGridRadiusThreshold
             
         }
         
@@ -401,7 +423,9 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             
             guard let panInteraction: CanvasInteraction = canvasPanInteraction else { return }
             
-            canvasOffset += panInteraction.velocity
+            move(panInteraction)
+            
+            transformed()
             
         }
         
@@ -417,68 +441,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             
             rotate(pinchInteraction)
             
-        }
-        
-        func move(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
-            
-            let averageVelocity: CGVector = (pinchInteraction.0.velocity + pinchInteraction.1.velocity) / 2.0
-            
-            canvasOffset += averageVelocity
-            
-        }
-        
-        func scale(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
-            
-            let distanceDirection: CGPoint = pinchInteraction.0.location - pinchInteraction.1.location
-            let distance: CGFloat = sqrt(pow(distanceDirection.x, 2.0) + pow(distanceDirection.y, 2.0))
-            let lastDistanceDirection: CGPoint = pinchInteraction.0.lastLocation - pinchInteraction.1.lastLocation
-            let lastDistance: CGFloat = sqrt(pow(lastDistanceDirection.x, 2.0) + pow(lastDistanceDirection.y, 2.0))
-            let relativeScale: CGFloat = distance / lastDistance
-            
-            canvasScale *= relativeScale
-
-            let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
-            
-            canvasOffset += scaleOffset(relativeScale: relativeScale, at: averageLocation)
-            
-        }
-        
-        func scaleOffset(relativeScale: CGFloat, at location: CGPoint) -> CGPoint {
-            
-            let locationOffset: CGPoint = location - canvasOffset
-            let scaledAverageLocationOffset: CGPoint = locationOffset * relativeScale
-            let relativeScaleOffset: CGPoint = locationOffset - scaledAverageLocationOffset
-            
-            return relativeScaleOffset
-            
-        }
-        
-        func rotate(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
-            
-            let distanceDirection: CGPoint = pinchInteraction.0.location - pinchInteraction.1.location
-            let lastDistanceDirection: CGPoint = pinchInteraction.0.lastLocation - pinchInteraction.1.lastLocation
-            let angleInRadians: CGFloat = atan2(distanceDirection.y, distanceDirection.x)
-            let lastAngleInRadians: CGFloat = atan2(lastDistanceDirection.y, lastDistanceDirection.x)
-            let relativeAngle: Angle = Angle(radians: Double(angleInRadians - lastAngleInRadians))
-                        
-            canvasAngle += relativeAngle
-            
-            let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
-            
-            canvasOffset += rotationOffset(relativeAngle: relativeAngle, at: averageLocation)
-            
-        }
-        
-        func rotationOffset(relativeAngle: Angle, at location: CGPoint) -> CGPoint {
-            
-            let locationOffset: CGPoint = location - canvasOffset
-            let locationOffsetRadius: CGFloat = sqrt(pow(locationOffset.x, 2.0) + pow(locationOffset.y, 2.0))
-            let locationOffsetAngle: Angle = Angle(radians: Double(atan2(locationOffset.y, locationOffset.x)))
-            let rotatedAverageLocactionOffsetAngle: Angle = locationOffsetAngle + relativeAngle
-            let rotatedAverageLocationOffset: CGPoint = CGPoint(x: cos(CGFloat(rotatedAverageLocactionOffsetAngle.radians)) * locationOffsetRadius, y: sin(CGFloat(rotatedAverageLocactionOffsetAngle.radians)) * locationOffsetRadius)
-            let relativeRotationOffset: CGPoint = locationOffset - rotatedAverageLocationOffset
-            
-            return relativeRotationOffset
+            transformed()
             
         }
         
@@ -508,6 +471,109 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                     break
                 }
             }
+        }
+        
+        // MARK: - Transform
+        
+        func move(_ interaction: CanvasInteraction) {
+            
+            offsetCanvas(by: interaction.velocity)
+            
+        }
+        
+        func move(_ interactions: (CanvasInteraction, CanvasInteraction)) {
+            
+            let averageVelocity: CGVector = (interactions.0.velocity + interactions.1.velocity) / 2.0
+            
+            offsetCanvas(by: averageVelocity)
+            
+        }
+        
+        func scale(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
+            
+            let distanceDirection: CGPoint = pinchInteraction.0.location - pinchInteraction.1.location
+            let distance: CGFloat = sqrt(pow(distanceDirection.x, 2.0) + pow(distanceDirection.y, 2.0))
+            let lastDistanceDirection: CGPoint = pinchInteraction.0.lastLocation - pinchInteraction.1.lastLocation
+            let lastDistance: CGFloat = sqrt(pow(lastDistanceDirection.x, 2.0) + pow(lastDistanceDirection.y, 2.0))
+            let relativeScale: CGFloat = distance / lastDistance
+            
+            if isNaN(relativeScale) {
+                fatalError("NaNaN")
+            }
+            
+            canvasScale *= relativeScale
+
+            let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
+            
+            offsetCanvas(by: scaleOffset(relativeScale: relativeScale, at: averageLocation).vector)
+            
+        }
+        
+        func scaleOffset(relativeScale: CGFloat, at location: CGPoint) -> CGPoint {
+            
+            let locationOffset: CGPoint = location - canvasOffset
+            let scaledAverageLocationOffset: CGPoint = locationOffset * relativeScale
+            let relativeScaleOffset: CGPoint = locationOffset - scaledAverageLocationOffset
+            
+            return relativeScaleOffset
+            
+        }
+        
+        func rotate(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
+            
+            let distanceDirection: CGPoint = pinchInteraction.0.location - pinchInteraction.1.location
+            let lastDistanceDirection: CGPoint = pinchInteraction.0.lastLocation - pinchInteraction.1.lastLocation
+            let angleInRadians: CGFloat = atan2(distanceDirection.y, distanceDirection.x)
+            let lastAngleInRadians: CGFloat = atan2(lastDistanceDirection.y, lastDistanceDirection.x)
+            let relativeAngle: Angle = Angle(radians: Double(angleInRadians - lastAngleInRadians))
+            
+            if isNaN(CGFloat(relativeAngle.degrees)) {
+                fatalError("NaNaN")
+            }
+            canvasAngle += relativeAngle
+            
+            let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
+            
+            offsetCanvas(by: rotationOffset(relativeAngle: relativeAngle, at: averageLocation).vector)
+            
+        }
+        
+        func rotationOffset(relativeAngle: Angle, at location: CGPoint) -> CGPoint {
+            
+            let locationOffset: CGPoint = location - canvasOffset
+            let locationOffsetRadius: CGFloat = sqrt(pow(locationOffset.x, 2.0) + pow(locationOffset.y, 2.0))
+            let locationOffsetAngle: Angle = Angle(radians: Double(atan2(locationOffset.y, locationOffset.x)))
+            let rotatedAverageLocactionOffsetAngle: Angle = locationOffsetAngle + relativeAngle
+            let rotatedAverageLocationOffset: CGPoint = CGPoint(x: cos(CGFloat(rotatedAverageLocactionOffsetAngle.radians)) * locationOffsetRadius, y: sin(CGFloat(rotatedAverageLocactionOffsetAngle.radians)) * locationOffsetRadius)
+            let relativeRotationOffset: CGPoint = locationOffset - rotatedAverageLocationOffset
+            
+            return relativeRotationOffset
+            
+        }
+        
+        func offsetCanvas(by offset: CGVector) {
+            
+            if isNaN(offset.dx) || isNaN(offset.dy) {
+                fatalError("NaNaN")
+            }
+            
+            canvasOffset += offset
+            
+//            for (id, interaction) in canvasDragInteractions {
+//                guard interaction.active else { continue }
+//                guard let index: Int = frameContentList.firstIndex(where: { $0.id == id }) else { continue }
+//                frameContentList[index].frame.origin -= canvasCoordinate.scaleRotate(offset)
+//            }
+            
+        }
+        
+        func transformed() {
+
+            for (id, interaction) in canvasDragInteractions {
+                guard interaction.active else { continue }
+                absoluteDrag(id: id, interaction: interaction)
+            }
+            
         }
         
         // MARK: - Animation
@@ -569,6 +635,10 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 }
             }
             return nil
+        }
+        
+        func isNaN(_ value: CGFloat) -> Bool {
+            value == .nan || "\(value)".lowercased() == "nan"
         }
         
     }

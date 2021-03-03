@@ -6,6 +6,11 @@ public struct CanvasCoordinate {
     public let offset: CGPoint
     public let scale: CGFloat
     public let angle: Angle
+    public init(offset: CGPoint, scale: CGFloat, angle: Angle) {
+        self.offset = offset
+        self.scale = scale
+        self.angle = angle
+    }
 }
 
 public extension CanvasCoordinate {
@@ -24,9 +29,7 @@ public extension CanvasCoordinate {
         CanvasCoordinate.rotate(position, by: angle) * scale + offset
     }
     func scaleRotate(_ vector: CGVector) -> CGVector {
-        var point = CGPoint(x: vector.dx, y: vector.dy)
-        point = CanvasCoordinate.rotate(point, by: -angle) / scale
-        return CGVector(dx: point.x, dy: point.y)
+        (CanvasCoordinate.rotate(vector.point, by: -angle) / scale).vector
     }
 }
 
@@ -37,6 +40,16 @@ public extension CanvasCoordinate {
         let radius: CGFloat = sqrt(pow(point.x, 2.0) + pow(point.y, 2.0))
         return CGPoint(x: cos(CGFloat(angle.radians)) * radius,
                        y: sin(CGFloat(angle.radians)) * radius)
+    }
+    static func direction(angle: Angle) -> CGPoint {
+        CGPoint(x: cos(CGFloat(angle.radians)),
+                y: sin(CGFloat(angle.radians)))
+    }
+    static func distance(from a: CGPoint, to b: CGPoint) -> CGFloat {
+        sqrt(pow(a.x - b.x, 2.0) + pow(a.y - b.y, 2.0))
+    }
+    static func angle(from a: CGPoint, to b: CGPoint) -> Angle {
+        Angle(radians: Double(atan2(a.y - b.y, a.x - b.x)))
     }
 }
 

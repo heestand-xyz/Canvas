@@ -20,6 +20,9 @@ class CanvasInteraction: Identifiable, Equatable {
     }
     
     var predictedEndLocation: CGPoint?
+    
+    /// absolute content space
+    var contentCenterOffset: CGVector?
 
     var active: Bool
     var auto: Bool
