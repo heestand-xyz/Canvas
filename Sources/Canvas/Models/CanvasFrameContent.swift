@@ -7,8 +7,8 @@ public struct CanvasFrameContent<FontContent: View, BackContent: View>: Identifi
     
     public let id: UUID
     
-    var frame: CGRect
-    var center: CGPoint {
+    public var frame: CGRect
+    public var center: CGPoint {
         get { frame.origin + frame.size / 2.0 }
         set { frame.origin = newValue - frame.size / 2.0 }
     }
