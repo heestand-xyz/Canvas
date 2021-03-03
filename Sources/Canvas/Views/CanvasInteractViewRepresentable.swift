@@ -138,10 +138,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                             let frameContent: CanvasFrameContent = frameContentList[index]
                             let position: CGPoint = frameContent.center
                             if !isOnGrid(position: position, snapGrid: snapGrid) {
-                                print(">>>>>>>>>>> MOVE")
                                 dragDone(id: dragID, interaction: canvasInteraction)
-                            } else {
-                                print(">>>>>>>>>>> GOOD")
                             }
                         }
                     }
@@ -294,18 +291,19 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                interaction.predictedEndLocation == nil,
                let snapGrid: CanvasSnapGrid = snapGrid {
 
-                interaction.velocity = predictSnapVelocity(id: id, interaction: interaction, snapGrid: snapGrid)
+                let snapPack: (CGPoint, CGVector) = predictSnapPack(id: id, interaction: interaction, snapGrid: snapGrid)
+                interaction.predictedEndLocation = snapPack.0
+                interaction.velocity = snapPack.1
                 
             }
             
-            let velocityPoint: CGPoint = CGPoint(x: interaction.velocity.dx, y: interaction.velocity.dy)
-            frameContentList[index].frame.origin += canvasCoordinate.scaleRotate(velocityPoint)
+            frameContentList[index].frame.origin += canvasCoordinate.scaleRotate(interaction.velocity)
             
         }
         
-        func predictSnapVelocity(id: UUID, interaction: CanvasInteraction, snapGrid: CanvasSnapGrid) -> CGVector {
+        func predictSnapPack(id: UUID, interaction: CanvasInteraction, snapGrid: CanvasSnapGrid) -> (CGPoint, CGVector) {
             
-            guard let index: Int = frameContentList.firstIndex(where: { $0.id == id }) else { return .zero }
+            guard let index: Int = frameContentList.firstIndex(where: { $0.id == id }) else { return (.zero, .zero) }
             let frameContent: CanvasFrameContent = frameContentList[index]
             
             let position: CGPoint = frameContent.center
@@ -314,18 +312,19 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             let interactionPosition: CGPoint = canvasCoordinate.absolute(location: interaction.location)
             let interactionCenterOffset: CGPoint = interactionPosition - position
             
-            let predictedInteractionLocation: CGPoint = predictInteractionLocation(interaction: interaction)
-            interaction.predictedEndLocation = predictedInteractionLocation
+            let predictedEndLocation: CGPoint = predictInteractionLocation(interaction: interaction)
             
-            let predictedInteractionPosition: CGPoint = canvasCoordinate.absolute(location: predictedInteractionLocation)
+            let predictedInteractionPosition: CGPoint = canvasCoordinate.absolute(location: predictedEndLocation)
             let predictedPosition: CGPoint = predictedInteractionPosition - interactionCenterOffset
             let predictedSnapPosition: CGPoint = snapToGridPosition(around: predictedPosition, snapGrid: snapGrid)
             
-            let predictedDifference: CGPoint = predictedPosition - position
-            let predictedSnapDifference: CGPoint = predictedSnapPosition - position
+            let predictedDifference: CGPoint = canvasCoordinate.relative(position: predictedPosition) - canvasCoordinate.relative(position: position)
+            let predictedSnapDifference: CGPoint = canvasCoordinate.relative(position: predictedSnapPosition) - canvasCoordinate.relative(position: position)
             let difference: CGPoint = predictedSnapDifference / predictedDifference
             
-            return velocity * difference
+            let predictedSnapVelocity: CGVector = velocity * difference
+            
+            return (predictedEndLocation, predictedSnapVelocity)
             
         }
         
