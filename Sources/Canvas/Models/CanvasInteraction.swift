@@ -18,7 +18,8 @@ class CanvasInteraction: Identifiable, Equatable {
     var velocityRadius: CGFloat {
         sqrt(pow(velocity.dx, 2.0) + pow(velocity.dy, 2.0))
     }
-
+    
+    var predictedEndLocation: CGPoint?
 
     var active: Bool
     var auto: Bool

@@ -49,7 +49,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
     
     class Coordinator<FrontContent: View, BackContent: View> {
         
-        let velocityStartDampenThreshold: CGFloat = 5.0
+        let velocityStartDampenThreshold: CGFloat = 2.5
         let velocityDampening: CGFloat = 0.98
         let velocityRadiusThreshold: CGFloat = 0.02
         let snapAngleRadius: Angle = Angle(degrees: 5)
@@ -123,17 +123,40 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             for index in 0..<count {
                 let reverseIndex: Int = count - index - 1
                 let canvasInteraction: CanvasInteraction = canvasInteractions[reverseIndex]
+            
+                func remove() {
+                    snapToGrid()
+                    canvasInteractions.remove(at: reverseIndex)
+                }
+                
+                func snapToGrid() {
+                    if let dragID: UUID = canvasDragInteractions.first(where: { (id, dragInteraction) in
+                        dragInteraction == canvasInteraction
+                    })?.key {
+                        if let index: Int = frameContentList.firstIndex(where: { $0.id == dragID }),
+                           let snapGrid: CanvasSnapGrid = snapGrid {
+                            let frameContent: CanvasFrameContent = frameContentList[index]
+                            let position: CGPoint = frameContent.center
+                            if !isOnGrid(position: position, snapGrid: snapGrid) {
+                                print(">>>>>>>>>>> MOVE")
+                                dragDone(id: dragID, interaction: canvasInteraction)
+                            } else {
+                                print(">>>>>>>>>>> GOOD")
+                            }
+                        }
+                    }
+                }
                 
                 if !canvasInteraction.active {
                     if !canvasInteraction.auto {
                         guard iOS && canvasInteraction.velocityRadius > velocityStartDampenThreshold else {
-                            canvasInteractions.remove(at: reverseIndex)
+                            remove()
                             continue
                         }
                         canvasInteraction.auto = true
                     }
                     guard iOS && canvasInteraction.velocityRadius > velocityRadiusThreshold else {
-                        canvasInteractions.remove(at: reverseIndex)
+                        remove()
                         continue
                     }
                     #if os(iOS)
@@ -149,16 +172,28 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 interaction.active && interaction != canvasPanInteraction && interaction != canvasPinchInteraction?.0 && interaction != canvasPinchInteraction?.1
             }
             for (id, dragInteraction) in canvasDragInteractions {
+                #if os(iOS)
+                let isInteracting: Bool = canvasInteractions.contains(dragInteraction)
+                if !isInteracting {
+                    canvasDragInteractions.removeValue(forKey: id)
+                }
+                #elseif os(macOS)
                 let isInteracting: Bool = filteredPotentialDragInteractions.contains(dragInteraction)
                 if !isInteracting {
                     dragDone(id: id, interaction: dragInteraction)
                     canvasDragInteractions.removeValue(forKey: id)
                 }
+                #endif
             }
             for interaction in filteredPotentialDragInteractions {
                 guard let index: Int = hitTestFrameContentIndex(at: interaction.location) else { continue }
                 let id: UUID = frameContentList[index].id
                 guard !canvasDragInteractions.contains(where: { $0.key == id }) else { return }
+//                if let oldIndex: Int = canvasDragInteractions.first(where: { (dragID, dragInteraction) in
+//                    dragInteraction.auto && id == dragID
+//                }) {
+//                    canvasDragInteractions.removeValue(forKey: id)
+//                }
                 canvasDragInteractions[id] = interaction
             }
               
@@ -200,23 +235,17 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 }
             }
             
-//            /// Pinch
-//            if let pinchInteraction: (CanvasInteraction, CanvasInteraction) = canvasPinchInteraction,
-//               pinchInteraction.0.auto || pinchInteraction.1.auto {
-//                pinch()
-//            }
-            
-            /// Pan
+            /// Auto Pan
             if let panInteraction: CanvasInteraction = canvasPanInteraction,
                panInteraction.auto {
                 pan()
             }
             
-//            /// Drag
-//            for (id, interaction) in canvasDragInteractions {
-//                guard interaction.auto else { continue }
-//                drag(id: id, interaction: interaction)
-//            }
+            /// Auto Drag
+            for (id, interaction) in canvasDragInteractions {
+                guard interaction.auto else { continue }
+                drag(id: id, interaction: interaction)
+            }
             
         }
         
@@ -261,8 +290,62 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             
             guard let index: Int = frameContentList.firstIndex(where: { $0.id == id }) else { return }
 
-            frameContentList[index].frame.origin += canvasCoordinate
-                .scaleRotate(CGPoint(x: interaction.velocity.dx, y: interaction.velocity.dy))
+            if interaction.auto,
+               interaction.predictedEndLocation == nil,
+               let snapGrid: CanvasSnapGrid = snapGrid {
+
+                interaction.velocity = predictSnapVelocity(id: id, interaction: interaction, snapGrid: snapGrid)
+                
+            }
+            
+            let velocityPoint: CGPoint = CGPoint(x: interaction.velocity.dx, y: interaction.velocity.dy)
+            frameContentList[index].frame.origin += canvasCoordinate.scaleRotate(velocityPoint)
+            
+        }
+        
+        func predictSnapVelocity(id: UUID, interaction: CanvasInteraction, snapGrid: CanvasSnapGrid) -> CGVector {
+            
+            guard let index: Int = frameContentList.firstIndex(where: { $0.id == id }) else { return .zero }
+            let frameContent: CanvasFrameContent = frameContentList[index]
+            
+            let position: CGPoint = frameContent.center
+            let velocity: CGVector = interaction.velocity
+            
+            let interactionPosition: CGPoint = canvasCoordinate.absolute(location: interaction.location)
+            let interactionCenterOffset: CGPoint = interactionPosition - position
+            
+            let predictedInteractionLocation: CGPoint = predictInteractionLocation(interaction: interaction)
+            interaction.predictedEndLocation = predictedInteractionLocation
+            
+            let predictedInteractionPosition: CGPoint = canvasCoordinate.absolute(location: predictedInteractionLocation)
+            let predictedPosition: CGPoint = predictedInteractionPosition - interactionCenterOffset
+            let predictedSnapPosition: CGPoint = snapToGridPosition(around: predictedPosition, snapGrid: snapGrid)
+            
+            let predictedDifference: CGPoint = predictedPosition - position
+            let predictedSnapDifference: CGPoint = predictedSnapPosition - position
+            let difference: CGPoint = predictedSnapDifference / predictedDifference
+            
+            return velocity * difference
+            
+        }
+        
+        func predictInteractionLocation(interaction: CanvasInteraction) -> CGPoint {
+            var location: CGPoint = interaction.location
+            var velocity: CGVector = interaction.velocity
+            while sqrt(pow(velocity.dx, 2.0) + pow(velocity.dy, 2.0)) > velocityRadiusThreshold {
+                location += velocity
+                velocity *= velocityDampening
+            }
+            return location
+        }
+        
+        func isOnGrid(position: CGPoint, snapGrid: CanvasSnapGrid) -> Bool {
+            
+            let snapPosition: CGPoint = snapToGridPosition(around: position, snapGrid: snapGrid)
+            let difference: CGPoint = snapPosition - position
+            let distance: CGFloat = sqrt(pow(difference.x, 2.0) + pow(difference.y, 2.0))
+            print(distance)
+            return distance < 0.2
             
         }
         
@@ -274,10 +357,22 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
 
             guard let index: Int = frameContentList.firstIndex(where: { $0.id == id }) else { return }
             let frameContent: CanvasFrameContent = frameContentList[index]
-
+            
             guard let snapGrid: CanvasSnapGrid = snapGrid else { return }
             
             let position: CGPoint = frameContent.center
+            let snapPosition: CGPoint = snapToGridPosition(around: position, snapGrid: snapGrid)
+            
+            animate(for: 0.25, ease: .easeOut) { fraction in
+                
+                self.frameContentList[index].center = position * (1.0 - fraction) + snapPosition * fraction
+                
+            } done: {}
+            
+        }
+        
+        func snapToGridPosition(around position: CGPoint, snapGrid: CanvasSnapGrid) -> CGPoint {
+            
             let snapPosition: CGPoint
             switch snapGrid {
             case .square(size: let size):
@@ -297,11 +392,7 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
                 }
             }
             
-            animate(for: 0.25, ease: .easeOut) { fraction in
-                
-                self.frameContentList[index].center = position * (1.0 - fraction) + snapPosition * fraction
-                
-            } done: {}
+            return snapPosition
             
         }
         

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Canvas
 import CoreGraphicsExtensions
 
 public struct CanvasGrid: View {
