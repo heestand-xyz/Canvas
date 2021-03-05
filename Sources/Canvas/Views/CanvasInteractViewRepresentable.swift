@@ -340,10 +340,11 @@ struct CanvasInteractViewRepresentable<FrontContent: View, BackContent: View>: V
             
             let predictedDifference: CGPoint = canvasCoordinate.relative(position: predictedPosition) - canvasCoordinate.relative(position: position)
             let predictedSnapDifference: CGPoint = canvasCoordinate.relative(position: predictedSnapPosition) - canvasCoordinate.relative(position: position)
-            let difference: CGPoint = predictedSnapDifference / predictedDifference
             if predictedDifference.x == 0.0 || predictedDifference.y == 0.0 {
-                fatalError("Zer0: \(difference)")
+                print("Zer0: \(predictedDifference)")
+                return (CGPoint.zero, CGVector.zero)
             }
+            let difference: CGPoint = predictedSnapDifference / predictedDifference
             
             let predictedSnapVelocity: CGVector = velocity * difference
             
