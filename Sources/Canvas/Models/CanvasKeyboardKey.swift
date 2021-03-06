@@ -1,5 +1,5 @@
 
-enum CanvasKeyboardKey {
+enum CanvasKeyboardFlag {
     case control
     case command
     case shift

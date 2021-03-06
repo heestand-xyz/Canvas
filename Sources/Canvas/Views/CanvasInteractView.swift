@@ -5,19 +5,19 @@ import CoreGraphicsExtensions
 class CanvasInteractView: MPView {
     
     @Binding var canvasInteractions: [CanvasInteraction]
-    @Binding var canvasKeyboardKeys: Set<CanvasKeyboardKey>
+    @Binding var canvasKeyboardFlags: Set<CanvasKeyboardFlag>
     @Binding var canvasMouseLocation: CGPoint?
     var didMoveCanvasInteractions: ([CanvasInteraction]) -> ()
     var didScroll: (CGVector) -> ()
 
     init(canvasInteractions: Binding<[CanvasInteraction]>,
-         canvasKeyboardKeys: Binding<Set<CanvasKeyboardKey>>,
+         canvasKeyboardFlags: Binding<Set<CanvasKeyboardFlag>>,
          canvasMouseLocation: Binding<CGPoint?>,
          didMoveCanvasInteractions: @escaping ([CanvasInteraction]) -> (),
          didScroll: @escaping (CGVector) -> ()) {
         
         _canvasInteractions = canvasInteractions
-        _canvasKeyboardKeys = canvasKeyboardKeys
+        _canvasKeyboardFlags = canvasKeyboardFlags
         _canvasMouseLocation = canvasMouseLocation
         self.didMoveCanvasInteractions = didMoveCanvasInteractions
         self.didScroll = didScroll
@@ -133,20 +133,20 @@ class CanvasInteractView: MPView {
     
     #if os(macOS)
     override func flagsChanged(with event: NSEvent) {
-        var keyboardKeys: Set<CanvasKeyboardKey> = []
+        var keyboardFlags: Set<CanvasKeyboardKey> = []
         switch event.modifierFlags.intersection(.deviceIndependentFlagsMask) {
         case .command:
-            keyboardKeys.insert(.command)
+            keyboardFlags.insert(.command)
         case .control:
-            keyboardKeys.insert(.control)
+            keyboardFlags.insert(.control)
         case .shift:
-            keyboardKeys.insert(.shift)
+            keyboardFlags.insert(.shift)
         case .option:
-            keyboardKeys.insert(.option)
+            keyboardFlags.insert(.option)
         default:
             break
         }
-        canvasKeyboardKeys = keyboardKeys
+        canvasKeyboardFlags = keyboardFlags
     }
     #endif
     
