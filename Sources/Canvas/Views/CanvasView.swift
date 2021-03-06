@@ -1,38 +1,16 @@
 import SwiftUI
 
-public struct CanvasView<BackgroundContent: View, MiddleContent: View, FrontContent: View, BackContent: View>: View {
+public struct CanvasView: View {
     
-    let backgroundContent: (CanvasCoordinate) -> (BackgroundContent)
-    let middleContent: (CanvasCoordinate) -> (MiddleContent)
+    @ObservedObject var canvas: Canvas
     
-    @ObservedObject var canvas: Canvas<FrontContent, BackContent>
-    
-    public init(canvas: Canvas<FrontContent, BackContent>,
-                middle: @escaping (CanvasCoordinate) -> (MiddleContent),
-                background: @escaping (CanvasCoordinate) -> (BackgroundContent)) {
+    public init(canvas: Canvas) {
         self.canvas = canvas
-        backgroundContent = background
-        middleContent = middle
     }
     
     public var body: some View {
         
         ZStack(alignment: .topLeading) {
-            
-            // Background
-            backgroundContent(canvas.coordinate)
-            
-            // Back
-            ZStack(alignment: .topLeading) {
-                ForEach(canvas.frameContentList) { frameContent in
-                    frameContent.backContent(canvas.coordinate)
-                        .canvasFrame(content: frameContent, scale: canvas.scale)
-                }
-            }
-            .frame(width: 1, height: 1, alignment: .topLeading) /// No Scale Hack
-            .canvasCoordinateRotationOffset(canvas.coordinate)
-            
-            middleContent(canvas.coordinate)
             
             // Touches
 //            #if DEBUG
@@ -51,16 +29,6 @@ public struct CanvasView<BackgroundContent: View, MiddleContent: View, FrontCont
             
             // Interact
             CanvasInteractViewRepresentable(canvas: canvas)
-            
-            // Front
-            ZStack(alignment: .topLeading) {
-                ForEach(canvas.frameContentList) { frameContent in
-                    frameContent.frontContent(canvas.coordinate)
-                        .canvasFrame(content: frameContent, scale: canvas.scale)
-                }
-            }
-            .frame(width: 1, height: 1, alignment: .topLeading) /// No Scale Hack
-            .canvasCoordinateRotationOffset(canvas.coordinate)
             
         }
         
