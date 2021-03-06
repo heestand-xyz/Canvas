@@ -4,16 +4,16 @@ import CoreGraphicsExtensions
 
 class CanvasInteractView: MPView {
     
-    @Binding var canvasInteractions: [CanvasInteraction]
+    @Binding var canvasInteractions: Set<CanvasInteraction>
     @Binding var canvasKeyboardFlags: Set<CanvasKeyboardFlag>
     @Binding var canvasMouseLocation: CGPoint?
-    var didMoveCanvasInteractions: ([CanvasInteraction]) -> ()
+    var didMoveCanvasInteractions: (Set<CanvasInteraction>) -> ()
     var didScroll: (CGVector) -> ()
 
-    init(canvasInteractions: Binding<[CanvasInteraction]>,
+    init(canvasInteractions: Binding<Set<CanvasInteraction>>,
          canvasKeyboardFlags: Binding<Set<CanvasKeyboardFlag>>,
          canvasMouseLocation: Binding<CGPoint?>,
-         didMoveCanvasInteractions: @escaping ([CanvasInteraction]) -> (),
+         didMoveCanvasInteractions: @escaping (Set<CanvasInteraction>) -> (),
          didScroll: @escaping (CGVector) -> ()) {
         
         _canvasInteractions = canvasInteractions
@@ -52,11 +52,11 @@ class CanvasInteractView: MPView {
             let location: CGPoint = touch.location(in: self)
             let canvasInteraction = CanvasInteraction(id: id, location: location)
             canvasInteraction.touch = touch
-            canvasInteractions.append(canvasInteraction)
+            canvasInteractions.insert(canvasInteraction)
         }
     }
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        var movedCanvasInteractions: [CanvasInteraction] = []
+        var movedCanvasInteractions: Set<CanvasInteraction> = []
         for touch in touches {
             guard let canvasInteraction: CanvasInteraction = canvasInteractions.first(where: { canvasInteraction in
                 canvasInteraction.touch == touch
@@ -67,7 +67,7 @@ class CanvasInteractView: MPView {
             let velocity: CGVector = CGVector(dx: location.x - lastLocation.x,
                                               dy: location.y - lastLocation.y)
             canvasInteraction.velocity = velocity
-            movedCanvasInteractions.append(canvasInteraction)
+            movedCanvasInteractions.insert(canvasInteraction)
         }
         didMoveCanvasInteractions(movedCanvasInteractions)
     }

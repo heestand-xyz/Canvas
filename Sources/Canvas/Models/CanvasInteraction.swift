@@ -4,7 +4,7 @@ import CoreGraphics
 import UIKit
 #endif
 
-class CanvasInteraction: Identifiable, Equatable {
+class CanvasInteraction: Identifiable {
     
     let id: UUID
     
@@ -40,8 +40,16 @@ class CanvasInteraction: Identifiable, Equatable {
         self.auto = false
     }
     
+}
+
+extension CanvasInteraction: Equatable {
     static func == (lhs: CanvasInteraction, rhs: CanvasInteraction) -> Bool {
         lhs.id == rhs.id
     }
-    
+}
+
+extension CanvasInteraction: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }

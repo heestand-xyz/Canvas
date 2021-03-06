@@ -48,9 +48,8 @@ public extension CanvasCoordinate {
     static func distance(from a: CGPoint, to b: CGPoint) -> CGFloat {
         sqrt(pow(b.x - a.x, 2.0) + pow(b.y - a.y, 2.0))
     }
-    #warning("flip a & b angle")
     static func angle(from a: CGPoint, to b: CGPoint) -> Angle {
-        Angle(radians: Double(atan2(a.y - b.y, a.x - b.x)))
+        Angle(radians: Double(atan2(b.y - a.y, b.x - a.x)))
     }
 }
 

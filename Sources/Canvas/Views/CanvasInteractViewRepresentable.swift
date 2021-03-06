@@ -56,51 +56,64 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         
         @objc func frameLoop() {
             
-            let count: Int = canvas.interactions.count
-            for index in 0..<count {
-                let reverseIndex: Int = count - index - 1
-                let canvasInteraction: CanvasInteraction = canvas.interactions[reverseIndex]
+            for interaction in canvas.interactions {
             
                 func remove() {
-                    canvas.interactions.remove(at: reverseIndex)
+                    canvas.interactions.remove(interaction)
                     endDrag()
                 }
                 
                 func endDrag() {
-                    if let dragID: UUID = canvas.dragInteractions.first(where: { (id, dragInteraction) in
-                        dragInteraction == canvasInteraction
-                    })?.key {
-                        canvas.delegate?.canvasWillEndDrag(id: dragID)
-                        snapToGrid(dragID: dragID) {
-                            self.canvas.delegate?.canvasDidEndDrag(id: dragID)
+                    if let dragInteraction: CanvasDragInteraction = canvas.dragInteractions.first(where: { dragInteraction in
+                        dragInteraction.interaction == interaction
+                    }) {
+                        let position: CGPoint = canvas.coordinate.absolute(location: interaction.location)
+                        canvas.delegate?.canvasDragWillEnd(dragInteraction.drag, at: position)
+                        snapToGrid(dragInteraction) {
+                            self.canvas.delegate?.canvasDragDidEnd(dragInteraction.drag, at: position)
                         }
                     }
                 }
                 
-                func snapToGrid(dragID: UUID, done: @escaping () -> ()) {
-                    guard let snapGrid: CanvasSnapGrid = canvas.snapContentToGrid else { done(); return }
-                    guard let position: CGPoint = canvas.delegate?.canvasContentPosition(id: dragID) else { done(); return }
+                func snapToGrid(_ dragInteraction: CanvasDragInteraction, done: @escaping () -> ()) {
+                    guard let snapGrid: CanvasSnapGrid = dragInteraction.drag.snapGrid else { done(); return }
+                    guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag) else { done(); return }
                     if !isOnGrid(position: position, snapGrid: snapGrid) {
-                        dragDone(id: dragID, interaction: canvasInteraction, done: done)
+                        dragDone(dragInteraction: dragInteraction, done: done)
                     }
                 }
                 
-                if !canvasInteraction.active {
-                    if !canvasInteraction.auto {
-                        guard iOS && canvasInteraction.velocityRadius > velocityStartDampenThreshold else {
+                if !interaction.active {
+                    
+                    if !interaction.auto {
+                        var dragPhysics: Bool?
+                        if let dragInteraction: CanvasDragInteraction = canvas.dragInteractions.first(where: { dragInteraction in
+                            dragInteraction.interaction == interaction
+                        }) {
+                            dragPhysics = dragInteraction.drag.physics
+                            let position: CGPoint = canvas.coordinate.absolute(location: interaction.location)
+                            canvas.delegate?.canvasDragReleased(dragInteraction.drag, at: position)
+                        }
+                        guard canvas.physics && dragPhysics != false else {
                             remove()
                             continue
                         }
-                        canvasInteraction.auto = true
+                        guard interaction.velocityRadius > velocityStartDampenThreshold else {
+                            remove()
+                            continue
+                        }
+                        interaction.auto = true
                     }
-                    guard iOS && canvasInteraction.velocityRadius > velocityRadiusThreshold else {
+                    
+                    guard iOS && interaction.velocityRadius > velocityRadiusThreshold else {
                         remove()
                         continue
                     }
                     #if os(iOS)
-                    canvasInteraction.location += canvasInteraction.velocity
-                    canvasInteraction.velocity *= velocityDampening
+                    interaction.location += interaction.velocity
+                    interaction.velocity *= velocityDampening
                     #endif
+                    
                 }
                 
             }
@@ -109,11 +122,11 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             let filteredPotentialDragInteractions: [CanvasInteraction] = canvas.interactions.filter { interaction in
                 interaction != canvas.panInteraction && interaction != canvas.pinchInteraction?.0 && interaction != canvas.pinchInteraction?.1
             }
-            for (id, dragInteraction) in canvas.dragInteractions {
+            for dragInteraction in canvas.dragInteractions {
                 #if os(iOS)
-                let isInteracting: Bool = canvas.interactions.contains(dragInteraction)
+                let isInteracting: Bool = canvas.interactions.contains(dragInteraction.interaction)
                 if !isInteracting {
-                    canvas.dragInteractions.removeValue(forKey: id)
+                    canvas.dragInteractions.remove(dragInteraction)
                 }
                 #elseif os(macOS)
                 let isInteracting: Bool = filteredPotentialDragInteractions.contains(dragInteraction)
@@ -125,15 +138,17 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             }
             for interaction in filteredPotentialDragInteractions {
                 let interactionPosition: CGPoint = canvas.coordinate.absolute(location: interaction.location)
-                guard let dragID: UUID = canvas.delegate?.canvasHitTest(at: interactionPosition) else { continue }
-                guard !canvas.dragInteractions.filter({ $0.value.active }).contains(where: { $0.key == dragID }) else { continue }
-                canvas.dragInteractions[dragID] = interaction
-                canvas.delegate?.canvasDidStartDrag(id: dragID)
+                guard let drag: CanvasDrag = canvas.delegate?.canvasDragHitTest(at: interactionPosition) else { continue }
+                guard !canvas.dragInteractions.filter({ $0.interaction.active }).contains(where: { $0.drag.id == drag.id }) else { continue }
+                let dragInteraction = CanvasDragInteraction(drag: drag, interaction: interaction)
+                canvas.dragInteractions.insert(dragInteraction)
+                let position: CGPoint = canvas.coordinate.absolute(location: interaction.location)
+                canvas.delegate?.canvasDragStarted(drag, at: position)
             }
               
             /// Pinch
             let filteredPotentialPinchInteractions: [CanvasInteraction] = canvas.interactions.filter { interaction in
-                interaction.active && !canvas.dragInteractions.contains(where: { $0.value == interaction })
+                interaction.active && !canvas.dragInteractions.contains(where: { $0.interaction == interaction })
             }
             if let pinchInteraction: (CanvasInteraction, CanvasInteraction) = canvas.pinchInteraction {
                 let isInteracting: Bool = filteredPotentialPinchInteractions.contains(pinchInteraction.0) && filteredPotentialPinchInteractions.contains(pinchInteraction.1)
@@ -151,7 +166,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             /// Pan
             let filteredPotentialPanInteractions: [CanvasInteraction] = canvas.interactions.filter { interaction in
-                interaction.active && !canvas.dragInteractions.contains(where: { $0.value == interaction })
+                interaction.active && !canvas.dragInteractions.contains(where: { $0.interaction == interaction })
             }
             if let panInteraction: CanvasInteraction = canvas.panInteraction {
                 let isInteracting: Bool = canvas.interactions.contains(panInteraction)
@@ -176,33 +191,33 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             }
             
             /// Auto Drag
-            for (id, interaction) in canvas.dragInteractions {
-                guard interaction.auto else { continue }
-                drag(id: id, interaction: interaction)
+            for dragInteraction in canvas.dragInteractions {
+                guard dragInteraction.interaction.auto else { continue }
+                drag(dragInteraction: dragInteraction)
             }
             
         }
         
-        func didMoveCanvasInteractions(_ canvasInteractions: [CanvasInteraction]) {
+        func didMoveCanvasInteractions(_ interactions: Set<CanvasInteraction>) {
             
             /// Pan
             if let panInteraction: CanvasInteraction = canvas.panInteraction,
-               canvasInteractions.contains(panInteraction) {
+               interactions.contains(panInteraction) {
                 pan()
             }
             
             /// Pinch
             if let pinchInteraction: (CanvasInteraction, CanvasInteraction) = canvas.pinchInteraction,
-               canvasInteractions.contains(pinchInteraction.0) && canvasInteractions.contains(pinchInteraction.1),
+               interactions.contains(pinchInteraction.0) && interactions.contains(pinchInteraction.1),
                pinchInteraction.0.active && pinchInteraction.1.active {
                 pinch()
             }
             
             /// Drag
-            for (id, interaction) in canvas.dragInteractions {
-                guard interaction.active else { continue }
-                guard canvasInteractions.contains(interaction) else { continue }
-                drag(id: id, interaction: interaction)
+            for dragInteraction in canvas.dragInteractions {
+                guard dragInteraction.interaction.active else { continue }
+                guard interactions.contains(dragInteraction.interaction) else { continue }
+                drag(dragInteraction: dragInteraction)
             }
             
         }
@@ -220,19 +235,22 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         
         // MARK: - Drag
         
-        func drag(id: UUID, interaction: CanvasInteraction) {
+        func drag(dragInteraction: CanvasDragInteraction) {
+            
+            let interaction: CanvasInteraction = dragInteraction.interaction
             
             if interaction.auto,
                interaction.predictedEndLocation == nil,
-               let snapGrid: CanvasSnapGrid = canvas.snapContentToGrid {
+               dragInteraction.drag.physics,
+               dragInteraction.drag.snapGrid != nil {
 
-                let snapPack: (CGPoint, CGVector) = predictSnapPack(id: id, interaction: interaction, snapGrid: snapGrid)
+                let snapPack: (CGPoint, CGVector) = predictSnapPack(dragInteraction: dragInteraction)
                 interaction.predictedEndLocation = snapPack.0
                 interaction.velocity = snapPack.1
                 
             }
             
-            guard let position: CGPoint = canvas.delegate?.canvasContentPosition(id: id) else { return }
+            guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag) else { return }
             
             if interaction.contentCenterOffset == nil {
                 interaction.contentCenterOffset = (canvas.coordinate.absolute(location: interaction.location) - position).vector
@@ -243,11 +261,13 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 fatalError("NaNaN")
             }
             
-            canvas.delegate?.canvasPositionContent(id: id, to: position + offset)
+            canvas.delegate?.canvasDragSetPosition(dragInteraction.drag, to: position + offset)
             
         }
         
-        func absoluteDrag(id: UUID, interaction: CanvasInteraction) {
+        func absoluteDrag(dragInteraction: CanvasDragInteraction) {
+            
+            let interaction: CanvasInteraction = dragInteraction.interaction
 
             guard interaction.active else { return }
             guard let contentCenterOffset: CGVector = interaction.contentCenterOffset else { return }
@@ -257,13 +277,17 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 fatalError("NaNaN")
             }
             
-            canvas.delegate?.canvasPositionContent(id: id, to: center)
+            canvas.delegate?.canvasDragSetPosition(dragInteraction.drag, to: center)
 
         }
         
-        func predictSnapPack(id: UUID, interaction: CanvasInteraction, snapGrid: CanvasSnapGrid) -> (CGPoint, CGVector) {
+        func predictSnapPack(dragInteraction: CanvasDragInteraction) -> (CGPoint, CGVector) {
             
-            guard let position: CGPoint = canvas.delegate?.canvasContentPosition(id: id) else { return (.zero, .zero) }
+            guard let snapGrid: CanvasSnapGrid = dragInteraction.drag.snapGrid else { return (.zero, .zero) }
+            
+            let interaction: CanvasInteraction = dragInteraction.interaction
+            
+            guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag) else { return (.zero, .zero) }
             let velocity: CGVector = interaction.velocity
             
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: interaction.location)
@@ -308,21 +332,23 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
         }
         
-        func dragDone(id: UUID, interaction: CanvasInteraction, done: @escaping () -> ()) {
-            snapToGrid(id: id, interaction: interaction, done: done)
+        func dragDone(dragInteraction: CanvasDragInteraction, done: @escaping () -> ()) {
+            
+            snapToGrid(dragInteraction: dragInteraction, done: done)
+            
         }
 
-        func snapToGrid(id: UUID, interaction: CanvasInteraction, done: @escaping () -> ()) {
-
-            guard let snapGrid: CanvasSnapGrid = canvas.snapContentToGrid else { return }
+        func snapToGrid(dragInteraction: CanvasDragInteraction, done: @escaping () -> ()) {
             
-            guard let position: CGPoint = canvas.delegate?.canvasContentPosition(id: id) else { return }
+            guard let snapGrid: CanvasSnapGrid = dragInteraction.drag.snapGrid else { return }
+            
+            guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag) else { return }
             let snapPosition: CGPoint = snapToGridPosition(around: position, snapGrid: snapGrid)
             
             Animation.animate(for: 0.25, ease: .easeOut) { fraction in
                 
                 let animatedPosition: CGPoint = position * (1.0 - fraction) + snapPosition * fraction
-                self.canvas.delegate?.canvasPositionContent(id: id, to: animatedPosition)
+                self.canvas.delegate?.canvasDragSetPosition(dragInteraction.drag, to: animatedPosition)
                 
             } done: {
                 done()
@@ -386,7 +412,9 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         // MARK: - Pinch Done
         
         func pinchDone(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
+            
             snapToAngle(pinchInteraction)
+            
         }
         
         func snapToAngle(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
@@ -507,9 +535,9 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         
         func transformed() {
 
-            for (id, interaction) in canvas.dragInteractions {
-                guard interaction.active else { continue }
-                absoluteDrag(id: id, interaction: interaction)
+            for dragInteraction in canvas.dragInteractions {
+                guard dragInteraction.interaction.active else { continue }
+                absoluteDrag(dragInteraction: dragInteraction)
             }
             
         }
