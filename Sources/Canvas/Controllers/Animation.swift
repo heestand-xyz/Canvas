@@ -4,16 +4,16 @@ import CoreGraphics
 import UIKit
 #endif
 
-struct Animation {
+public struct Animation {
     
-    enum AnimationEase {
+    public enum AnimationEase {
         case linear
         case easeIn
         case easeInOut
         case easeOut
     }
     
-    static func animate(for duration: CGFloat, ease: AnimationEase = .linear, loop: @escaping (CGFloat) -> (), done: @escaping () -> ()) {
+    public static func animate(for duration: CGFloat, ease: AnimationEase = .linear, loop: @escaping (CGFloat) -> (), done: (() -> ())? = nil) {
         let startTime = Date()
         #if os(iOS)
         let fps: Int = UIScreen.main.maximumFramesPerSecond
@@ -32,7 +32,7 @@ struct Animation {
             }
             loop(easeFraction)
             if fraction == 1.0 {
-                done()
+                done?()
                 t.invalidate()
             }
         }), forMode: .common)

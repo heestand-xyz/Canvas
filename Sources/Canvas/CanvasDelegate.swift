@@ -3,14 +3,14 @@ import CoreGraphics
 
 public protocol CanvasDelegate: AnyObject {
 
-    func canvasDragHitTest(at position: CGPoint) -> CanvasDrag?
+    func canvasDragHitTest(at position: CGPoint, coordinate: CanvasCoordinate) -> CanvasDrag?
     
-    func canvasDragGetPosition(_ drag: CanvasDrag) -> CGPoint
-    func canvasDragSetPosition(_ drag: CanvasDrag, to position: CGPoint)
+    func canvasDragGetPosition(_ drag: CanvasDrag, coordinate: CanvasCoordinate) -> CGPoint
+    func canvasDragSetPosition(_ drag: CanvasDrag, to position: CGPoint, coordinate: CanvasCoordinate)
 
-    func canvasDragStarted(_ drag: CanvasDrag, at position: CGPoint)
-    func canvasDragReleased(_ drag: CanvasDrag, at position: CGPoint)
-    func canvasDragWillEnd(_ drag: CanvasDrag, at position: CGPoint)
-    func canvasDragDidEnd(_ drag: CanvasDrag, at position: CGPoint)
+    func canvasDragStarted(_ drag: CanvasDrag, at position: CGPoint, coordinate: CanvasCoordinate)
+    func canvasDragReleased(_ drag: CanvasDrag, at position: CGPoint, coordinate: CanvasCoordinate)
+    func canvasDragWillEnd(_ drag: CanvasDrag, at position: CGPoint, coordinate: CanvasCoordinate)
+    func canvasDragDidEnd(_ drag: CanvasDrag, at position: CGPoint, coordinate: CanvasCoordinate)
     
 }

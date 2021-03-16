@@ -94,7 +94,7 @@ class CanvasInteractView: MPView {
         let location: CGPoint = getMouseLocation(event: event)
         let id = UUID()
         let canvasInteraction = CanvasInteraction(id: id, location: location)
-        canvasInteractions.append(canvasInteraction)
+        canvasInteractions.insert(canvasInteraction)
     }
     override func mouseUp(with event: NSEvent) {
         guard let canvasInteraction: CanvasInteraction = canvasInteractions.first else { return }
@@ -133,7 +133,7 @@ class CanvasInteractView: MPView {
     
     #if os(macOS)
     override func flagsChanged(with event: NSEvent) {
-        var keyboardFlags: Set<CanvasKeyboardKey> = []
+        var keyboardFlags: Set<CanvasKeyboardFlag> = []
         switch event.modifierFlags.intersection(.deviceIndependentFlagsMask) {
         case .command:
             keyboardFlags.insert(.command)
