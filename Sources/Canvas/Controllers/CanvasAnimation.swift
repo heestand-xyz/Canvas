@@ -4,7 +4,7 @@ import CoreGraphics
 import UIKit
 #endif
 
-public struct Animation {
+public struct CanvasAnimation {
     
     public enum AnimationEase {
         case linear

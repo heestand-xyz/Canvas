@@ -349,7 +349,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag, coordinate: canvas.coordinate) else { return }
             let snapPosition: CGPoint = snapToGridPosition(around: position, snapGrid: snapGrid)
             
-            Animation.animate(for: 0.25, ease: .easeOut) { fraction in
+            CanvasAnimation.animate(for: 0.25, ease: .easeOut) { fraction in
                 
                 let animatedPosition: CGPoint = position * (1.0 - fraction) + snapPosition * fraction
                 self.canvas.delegate?.canvasDragSetPosition(dragInteraction.drag, to: animatedPosition, coordinate: self.canvas.coordinate)
@@ -434,7 +434,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     let relativeAngle: Angle = angle - currentAngle
                     let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
                     let offset: CGPoint = currentOffset + rotationOffset(relativeAngle: relativeAngle, at: averageLocation)
-                    Animation.animate(for: 0.25, ease: .easeOut) { fraction in
+                    CanvasAnimation.animate(for: 0.25, ease: .easeOut) { fraction in
                         self.canvas.offset = currentOffset * (1.0 - fraction) + offset * fraction
                         self.canvas.angle = currentAngle * Double(1.0 - fraction) + angle * Double(fraction)
                     } done: {}
