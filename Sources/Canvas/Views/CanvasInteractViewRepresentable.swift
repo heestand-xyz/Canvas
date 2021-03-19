@@ -123,22 +123,10 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 interaction != canvas.panInteraction && interaction != canvas.pinchInteraction?.0 && interaction != canvas.pinchInteraction?.1
             }
             for dragInteraction in canvas.dragInteractions {
-                #if os(iOS)
                 let isInteracting: Bool = canvas.interactions.contains(dragInteraction.interaction)
                 if !isInteracting {
                     canvas.dragInteractions.remove(dragInteraction)
                 }
-                #elseif os(macOS)
-                let isInteracting: Bool = canvas.interactions.filter(\.active).contains(dragInteraction.interaction)
-                if !isInteracting {
-                    canvas.dragInteractions.remove(dragInteraction)
-                    let position: CGPoint = canvas.coordinate.absolute(location: dragInteraction.interaction.location)
-                    self.canvas.delegate?.canvasDragWillEnd(dragInteraction.drag, at: position, coordinate: self.canvas.coordinate)
-                    dragDone(dragInteraction: dragInteraction) {
-                        self.canvas.delegate?.canvasDragDidEnd(dragInteraction.drag, at: position, coordinate: self.canvas.coordinate)
-                    }
-                }
-                #endif
             }
             for interaction in filteredPotentialDragInteractions {
                 let interactionPosition: CGPoint = canvas.coordinate.absolute(location: interaction.location)
