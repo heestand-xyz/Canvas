@@ -120,7 +120,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             /// Drag
             let filteredPotentialDragInteractions: [CanvasInteraction] = canvas.interactions.filter { interaction in
-                interaction != canvas.panInteraction && interaction != canvas.pinchInteraction?.0 && interaction != canvas.pinchInteraction?.1
+                !canvas.dragInteractions.map(\.interaction).contains(interaction) && interaction != canvas.panInteraction && interaction != canvas.pinchInteraction?.0 && interaction != canvas.pinchInteraction?.1
             }
             for dragInteraction in canvas.dragInteractions {
                 let isInteracting: Bool = canvas.interactions.contains(dragInteraction.interaction)
