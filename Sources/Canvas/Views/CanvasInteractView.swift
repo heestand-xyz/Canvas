@@ -103,8 +103,6 @@ class CanvasInteractView: MPView {
                                           dy: location.y - lastLocation.y)
         canvasInteraction.velocity = velocity
         didMoveCanvasInteractions([canvasInteraction])
-        
-        print("DRAG", canvas.interactions.count)
     }
     override func mouseMoved(with event: NSEvent) {
         canvas.mouseLocation = getMouseLocation(event: event)
