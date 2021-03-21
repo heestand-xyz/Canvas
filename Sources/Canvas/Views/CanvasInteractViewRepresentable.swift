@@ -12,14 +12,19 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
     }
 
     func makeView(context: Context) -> CanvasInteractView {
-        CanvasInteractView(canvasInteractions: $canvas.interactions,
-                           canvasKeyboardFlags: $canvas.keyboardFlags,
-                           canvasMouseLocation: $canvas.mouseLocation,
+        CanvasInteractView(canvas: canvas,
                            didMoveCanvasInteractions: context.coordinator.didMoveCanvasInteractions(_:),
                            didScroll: context.coordinator.didScroll(_:))
     }
     
-    func updateView(_ view: CanvasInteractView, context: Context) {}
+    func updateView(_ canvasInteractView: CanvasInteractView, context: Context) {
+        if context.coordinator.canvas != canvas {
+            context.coordinator.canvas = canvas
+            canvasInteractView.canvas = canvas
+            canvasInteractView.didMoveCanvasInteractions = context.coordinator.didMoveCanvasInteractions(_:)
+            canvasInteractView.didScroll = context.coordinator.didScroll(_:)
+        }
+    }
     
     func makeCoordinator() -> Coordinator {
         Coordinator(canvas: canvas)
@@ -57,7 +62,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         @objc func frameLoop() {
             
             for interaction in canvas.interactions {
-            
+                
                 func remove() {
                     canvas.interactions.remove(interaction)
                     endDrag()
