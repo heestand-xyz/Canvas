@@ -15,10 +15,10 @@ public struct CanvasAnimation {
     
     public static func animate(for duration: CGFloat, ease: AnimationEase = .linear, loop: @escaping (CGFloat) -> (), done: (() -> ())? = nil) {
         let startTime = Date()
-        #if os(iOS)
-        let fps: Int = UIScreen.main.maximumFramesPerSecond
-        #else
+        #if os(macOS)
         let fps: Int = 60
+        #else
+        let fps: Int = UIScreen.main.maximumFramesPerSecond
         #endif
         RunLoop.current.add(Timer(timeInterval: 1.0 / Double(fps), repeats: true, block: { t in
             let elapsedTime = CGFloat(-startTime.timeIntervalSinceNow)

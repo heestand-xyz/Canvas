@@ -14,6 +14,14 @@ public struct CanvasCoordinate {
 }
 
 public extension CanvasCoordinate {
+    static func cross(from fromCoordinate: CanvasCoordinate, to toCoordinate: CanvasCoordinate, at fraction: CGFloat) -> CanvasCoordinate {
+        CanvasCoordinate(offset: fromCoordinate.offset * (1.0 - fraction) + toCoordinate.offset * fraction,
+                         scale: fromCoordinate.scale * (1.0 - fraction) + toCoordinate.scale * fraction,
+                         angle: Angle(degrees: fromCoordinate.angle.degrees * Double(1.0 - fraction) + toCoordinate.angle.degrees * Double(fraction)))
+    }
+}
+
+public extension CanvasCoordinate {
     var rotatedOffset: CGPoint {
         CanvasCoordinate.rotate(offset, by: -angle)
     }
