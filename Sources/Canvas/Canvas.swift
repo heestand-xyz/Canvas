@@ -52,25 +52,66 @@ extension Canvas: Equatable {
     }
 }
 
-// MARK: - Reset
+// MARK: - Move
 
-extension Canvas {
+public extension Canvas {
     
-    public func reset(animated: Bool = false) {
+    func move(to coordinate: CanvasCoordinate, animated: Bool = false) {
         let currentOffset: CGPoint = self.offset
         let currentScale: CGFloat = self.scale
         let currentAngle: Angle = self.angle
-        let currentSize: CGSize = self.size
         if animated {
             CanvasAnimation.animate(for: 0.25, ease: .easeInOut) { fraction in
-                self.offset = currentOffset * (1.0 - fraction) + (currentSize.point / 2) * fraction
-                self.scale = currentScale * (1.0 - fraction) + fraction
-                self.angle = Angle(degrees: currentAngle.degrees * (1.0 - Double(fraction)))
+                self.offset = currentOffset * (1.0 - fraction) + coordinate.offset * fraction
+                self.scale = currentScale * (1.0 - fraction) + coordinate.scale * fraction
+                self.angle = Angle(degrees: currentAngle.degrees * Double(1.0 - fraction) + coordinate.angle.degrees * Double(fraction))
             }
         } else {
-            self.offset = offset
-            self.scale = 1.0
-            self.angle = .zero
+            self.offset = coordinate.offset
+            self.scale = coordinate.scale
+            self.angle = coordinate.angle
         }
+    }
+}
+
+
+// MARK: - Reset
+
+public extension Canvas {
+    
+    var resetCoordinate: CanvasCoordinate {
+        CanvasCoordinate(offset: size.point / 2, scale: 1.0, angle: .zero)
+    }
+    
+    func reset(animated: Bool = false) {
+        move(to: resetCoordinate, animated: animated)
+    }
+    
+}
+
+// MARK: - Fit
+
+public extension Canvas {
+    
+    func fitCoordinate(in frame: CGRect, padding: CGFloat) -> CanvasCoordinate {
+        
+        guard size != .zero else { return .zero }
+        
+        let targetScale: CGFloat = min(size.width / frame.width, size.height / frame.height)
+        let targetFrame: CGRect = CGRect(origin: frame.origin - padding / targetScale,
+                                         size: frame.size + (padding * 2) / targetScale)
+
+        #warning("Fit Canvas in Center of Nodes")
+        let fitOffset: CGPoint = size.point / 2 // targetFrame.center + size / 2
+        let fitScale: CGFloat = min(size.width / targetFrame.width, size.height / targetFrame.height)
+        #warning("Fit Canvas with Angle")
+        let fitAngle: Angle = .zero
+        let fitCoordinate = CanvasCoordinate(offset: fitOffset, scale: fitScale, angle: fitAngle)
+
+        return fitCoordinate
+    }
+    
+    func fit(in frame: CGRect, padding: CGFloat, animated: Bool = false) {
+        move(to: fitCoordinate(in: frame, padding: padding), animated: animated)
     }
 }
