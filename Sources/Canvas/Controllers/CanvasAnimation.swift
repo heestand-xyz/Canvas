@@ -20,6 +20,7 @@ public struct CanvasAnimation {
         #else
         let fps: Int = UIScreen.main.maximumFramesPerSecond
         #endif
+        loop(0.0)
         RunLoop.current.add(Timer(timeInterval: 1.0 / Double(fps), repeats: true, block: { t in
             let elapsedTime = CGFloat(-startTime.timeIntervalSinceNow)
             let fraction = min(elapsedTime / duration, 1.0)
@@ -30,8 +31,10 @@ public struct CanvasAnimation {
             case .easeInOut: easeFraction = cos(fraction * .pi - .pi) / 2 + 0.5
             case .easeOut: easeFraction = cos(fraction * .pi / 2 - .pi / 2)
             }
-            loop(easeFraction)
-            if fraction == 1.0 {
+            if fraction < 1.0 {
+                loop(easeFraction)
+            } else {
+                loop(1.0)
                 done?()
                 t.invalidate()
             }
