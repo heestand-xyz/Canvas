@@ -13,4 +13,7 @@ public protocol CanvasDelegate: AnyObject {
     func canvasDragWillEnd(_ drag: CanvasDrag, at position: CGPoint, coordinate: CanvasCoordinate)
     func canvasDragDidEnd(_ drag: CanvasDrag, at position: CGPoint, coordinate: CanvasCoordinate)
     
+    func canvasMoveStarted(coordinate: CanvasCoordinate)
+    func canvasMoveEnded(coordinate: CanvasCoordinate)
+    
 }

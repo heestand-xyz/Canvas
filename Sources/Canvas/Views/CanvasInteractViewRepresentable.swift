@@ -14,7 +14,9 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
     func makeView(context: Context) -> CanvasInteractView {
         CanvasInteractView(canvas: canvas,
                            didMoveCanvasInteractions: context.coordinator.didMoveCanvasInteractions(_:),
-                           didScroll: context.coordinator.didScroll(_:))
+                           didStartScroll: context.coordinator.didStartScroll,
+                           didScroll: context.coordinator.didScroll(_:),
+                           didEndScroll: context.coordinator.didEndScroll)
     }
     
     func updateView(_ canvasInteractView: CanvasInteractView, context: Context) {
@@ -22,7 +24,9 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             context.coordinator.canvas = canvas
             canvasInteractView.canvas = canvas
             canvasInteractView.didMoveCanvasInteractions = context.coordinator.didMoveCanvasInteractions(_:)
+            canvasInteractView.didStartScroll = context.coordinator.didStartScroll
             canvasInteractView.didScroll = context.coordinator.didScroll(_:)
+            canvasInteractView.didEndScroll = context.coordinator.didEndScroll
         }
     }
     
@@ -152,6 +156,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 if !isInteracting {
                     pinchDone(pinchInteraction)
                     canvas.pinchInteraction = nil
+                    canvas.delegate?.canvasMoveEnded(coordinate: canvas.coordinate)
                 }
             }
             if canvas.pinchInteraction == nil {
@@ -169,15 +174,18 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 let isInteracting: Bool = canvas.interactions.contains(panInteraction)
                 if !isInteracting {
                     canvas.panInteraction = nil
+                    canvas.delegate?.canvasMoveEnded(coordinate: canvas.coordinate)
                 } else if !panInteraction.active {
                     if filteredPotentialPanInteractions.count == 1 {
                         canvas.panInteraction = nil
+                        canvas.delegate?.canvasMoveEnded(coordinate: canvas.coordinate)
                     }
                 }
             }
             if canvas.panInteraction == nil && canvas.pinchInteraction == nil {
                 if filteredPotentialPanInteractions.count == 1 {
                     canvas.panInteraction = filteredPotentialPanInteractions[0]
+                    canvas.delegate?.canvasMoveStarted(coordinate: canvas.coordinate)
                 }
             }
             
@@ -219,6 +227,10 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
         }
         
+        func didStartScroll() {
+            canvas.delegate?.canvasMoveStarted(coordinate: canvas.coordinate)
+        }
+        
         func didScroll(_ velocity: CGVector) {
             if canvas.keyboardFlags.contains(.option) {
                 guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
@@ -228,6 +240,10 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             } else {
                 offsetCanvas(by: velocity)
             }
+        }
+        
+        func didEndScroll() {
+            canvas.delegate?.canvasMoveEnded(coordinate: canvas.coordinate)
         }
         
         // MARK: - Drag

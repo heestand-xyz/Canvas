@@ -6,16 +6,26 @@ class CanvasInteractView: MPView {
     
     var canvas: Canvas
     var didMoveCanvasInteractions: (Set<CanvasInteraction>) -> ()
+    var didStartScroll: () -> ()
     var didScroll: (CGVector) -> ()
+    var didEndScroll: () -> ()
+    
+    #if os(macOS)
+    var scrollTimer: Timer?
+    #endif
 
     init(canvas: Canvas,
          didMoveCanvasInteractions: @escaping (Set<CanvasInteraction>) -> (),
-         didScroll: @escaping (CGVector) -> ()) {
+         didStartScroll: @escaping () -> (),
+         didScroll: @escaping (CGVector) -> (),
+         didEndScroll: @escaping () -> ()) {
         
         self.canvas = canvas
         self.didMoveCanvasInteractions = didMoveCanvasInteractions
+        self.didStartScroll = didStartScroll
         self.didScroll = didScroll
-        
+        self.didEndScroll = didEndScroll
+
         super.init(frame: .zero)
         
         #if os(iOS)
@@ -121,7 +131,16 @@ class CanvasInteractView: MPView {
     
     #if os(macOS)
     override func scrollWheel(with event: NSEvent) {
+        if scrollTimer == nil {
+            didStartScroll()
+        }
         didScroll(CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY))
+        scrollTimer?.invalidate()
+        scrollTimer = Timer(timeInterval: 0.1, repeats: false, block: { _ in
+            self.scrollTimer = nil
+            self.didEndScroll()
+        })
+        RunLoop.current.add(scrollTimer!, forMode: .common)
     }
     #endif
     
