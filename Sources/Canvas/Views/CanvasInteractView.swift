@@ -12,6 +12,7 @@ class CanvasInteractView: MPView {
     
     #if os(macOS)
     var scrollTimer: Timer?
+    let scrollTimeout: Double = 0.15
     #endif
 
     init(canvas: Canvas,
@@ -136,7 +137,7 @@ class CanvasInteractView: MPView {
         }
         didScroll(CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY))
         scrollTimer?.invalidate()
-        scrollTimer = Timer(timeInterval: 0.1, repeats: false, block: { _ in
+        scrollTimer = Timer(timeInterval: scrollTimeout, repeats: false, block: { _ in
             self.scrollTimer = nil
             self.didEndScroll()
         })

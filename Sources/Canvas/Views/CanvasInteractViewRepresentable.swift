@@ -232,17 +232,24 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         }
         
         func didScroll(_ velocity: CGVector) {
-            if canvas.keyboardFlags.contains(.option) {
+            if canvas.keyboardFlags.contains(.shift) {
                 guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
                 let relativeScale: CGFloat = 1.0 + velocity.dy * 0.0025
-                canvas.scale *= relativeScale
-                offsetCanvas(by: scaleOffset(relativeScale: relativeScale, at: mouseLocation).vector)
+                scaleCanvas(by: relativeScale, at: mouseLocation)
+            } else if canvas.keyboardFlags.contains(.option) {
+                guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
+                let relativeAngle: Angle = Angle(degrees: Double(velocity.dy) * 0.5)
+                rotateCanvas(by: relativeAngle, at: mouseLocation)
             } else {
                 offsetCanvas(by: velocity)
             }
         }
         
         func didEndScroll() {
+            if canvas.keyboardFlags.contains(.option) {
+                guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
+                snapToAngle(at: mouseLocation)
+            }
             canvas.delegate?.canvasMoveEnded(coordinate: canvas.coordinate)
         }
         
@@ -431,6 +438,11 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         }
         
         func snapToAngle(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
+            let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
+            snapToAngle(at: averageLocation)
+        }
+        
+        func snapToAngle(at location: CGPoint) {
             guard let snapAngle: Angle = canvas.snapGridToAngle else { return }
             let count: Int = Int(360.0 / snapAngle.degrees)
             let angles: [Angle] = (0..<count).map { index in
@@ -441,8 +453,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     let currentAngle: Angle = canvas.angle
                     let currentOffset: CGPoint = canvas.offset
                     let relativeAngle: Angle = angle - currentAngle
-                    let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
-                    let offset: CGPoint = currentOffset + rotationOffset(relativeAngle: relativeAngle, at: averageLocation)
+                    let offset: CGPoint = currentOffset + rotationOffset(relativeAngle: relativeAngle, at: location)
                     CanvasAnimation.animate(for: 0.25, ease: .easeOut) { fraction in
                         self.canvas.offset = currentOffset * (1.0 - fraction) + offset * fraction
                         self.canvas.angle = currentAngle * Double(1.0 - fraction) + angle * Double(fraction)
@@ -480,11 +491,17 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 fatalError("NaNaN")
             }
             
-            canvas.scale *= relativeScale
-
             let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
             
-            offsetCanvas(by: scaleOffset(relativeScale: relativeScale, at: averageLocation).vector)
+            scaleCanvas(by: relativeScale, at: averageLocation)
+            
+        }
+        
+        func scaleCanvas(by relativeScale: CGFloat, at location: CGPoint) {
+            
+            canvas.scale *= relativeScale
+
+            offsetCanvas(by: scaleOffset(relativeScale: relativeScale, at: location).vector)
             
         }
         
@@ -509,11 +526,18 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             if isNaN(CGFloat(relativeAngle.degrees)) {
                 fatalError("NaNaN")
             }
-            canvas.angle += relativeAngle
             
             let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
             
-            offsetCanvas(by: rotationOffset(relativeAngle: relativeAngle, at: averageLocation).vector)
+            rotateCanvas(by: relativeAngle, at: averageLocation)
+            
+        }
+        
+        func rotateCanvas(by relativeAngle: Angle, at location: CGPoint) {
+            
+            canvas.angle += relativeAngle
+            
+            offsetCanvas(by: rotationOffset(relativeAngle: relativeAngle, at: location).vector)
             
         }
         
