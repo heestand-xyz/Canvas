@@ -155,8 +155,11 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 let isInteracting: Bool = filteredPotentialPinchInteractions.contains(pinchInteraction.0) && filteredPotentialPinchInteractions.contains(pinchInteraction.1)
                 if !isInteracting {
                     pinchDone(pinchInteraction)
+                    let interactionPosition0: CGPoint = canvas.coordinate.absolute(location: pinchInteraction.0.location)
+                    let interactionPosition1: CGPoint = canvas.coordinate.absolute(location: pinchInteraction.0.location)
+                    let interactionPosition: CGPoint = (interactionPosition0 + interactionPosition1) / 2
+                    canvas.delegate?.canvasMoveEnded(at: interactionPosition, coordinate: canvas.coordinate)
                     canvas.pinchInteraction = nil
-                    canvas.delegate?.canvasMoveEnded(coordinate: canvas.coordinate)
                 }
             }
             if canvas.pinchInteraction == nil {
@@ -172,20 +175,22 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             }
             if let panInteraction: CanvasInteraction = canvas.panInteraction {
                 let isInteracting: Bool = canvas.interactions.contains(panInteraction)
+                let interactionPosition: CGPoint = canvas.coordinate.absolute(location: panInteraction.location)
                 if !isInteracting {
+                    canvas.delegate?.canvasMoveEnded(at: interactionPosition, coordinate: canvas.coordinate)
                     canvas.panInteraction = nil
-                    canvas.delegate?.canvasMoveEnded(coordinate: canvas.coordinate)
                 } else if !panInteraction.active {
                     if filteredPotentialPanInteractions.count == 1 {
                         canvas.panInteraction = nil
-                        canvas.delegate?.canvasMoveEnded(coordinate: canvas.coordinate)
+                        canvas.delegate?.canvasMoveEnded(at: interactionPosition, coordinate: canvas.coordinate)
                     }
                 }
             }
             if canvas.panInteraction == nil && canvas.pinchInteraction == nil {
                 if filteredPotentialPanInteractions.count == 1 {
                     canvas.panInteraction = filteredPotentialPanInteractions[0]
-                    canvas.delegate?.canvasMoveStarted(coordinate: canvas.coordinate)
+                    let interactionPosition: CGPoint = canvas.coordinate.absolute(location: canvas.panInteraction!.location)
+                    canvas.delegate?.canvasMoveStarted(at: interactionPosition, coordinate: canvas.coordinate)
                 }
             }
             
@@ -228,11 +233,13 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         }
         
         func didStartScroll() {
-            canvas.delegate?.canvasMoveStarted(coordinate: canvas.coordinate)
+            guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
+            canvas.delegate?.canvasMoveStarted(at: interactionPosition, coordinate: canvas.coordinate)
         }
         
         func didScroll(_ velocity: CGVector) {
-            if canvas.keyboardFlags.contains(.shift) {
+            if canvas.keyboardFlags.contains(.command) {
                 guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
                 let relativeScale: CGFloat = 1.0 + velocity.dy * 0.0025
                 scaleCanvas(by: relativeScale, at: mouseLocation)
@@ -246,11 +253,12 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         }
         
         func didEndScroll() {
+            guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             if canvas.keyboardFlags.contains(.option) {
-                guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
                 snapToAngle(at: mouseLocation)
             }
-            canvas.delegate?.canvasMoveEnded(coordinate: canvas.coordinate)
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
+            canvas.delegate?.canvasMoveEnded(at: interactionPosition, coordinate: canvas.coordinate)
         }
         
         // MARK: - Drag
