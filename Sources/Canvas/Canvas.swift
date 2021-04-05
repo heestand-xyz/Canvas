@@ -75,16 +75,16 @@ public extension Canvas {
 }
 
 
-// MARK: - Reset
+// MARK: - Origin
 
 public extension Canvas {
     
-    var resetCoordinate: CanvasCoordinate {
+    var originCoordinate: CanvasCoordinate {
         CanvasCoordinate(offset: size.point / 2, scale: 1.0, angle: .zero)
     }
     
-    func reset(animated: Bool = false) {
-        move(to: resetCoordinate, animated: animated)
+    func resetToOrigin(animated: Bool = false) {
+        move(to: originCoordinate, animated: animated)
     }
     
 }
