@@ -101,8 +101,7 @@ public extension Canvas {
         let targetFrame: CGRect = CGRect(origin: frame.origin - padding / targetScale,
                                          size: frame.size + (padding * 2) / targetScale)
 
-        #warning("Fit Canvas in Center of Nodes")
-        let fitOffset: CGPoint = size.point / 2 // targetFrame.center + size / 2
+        let fitOffset: CGPoint = size / 2 + targetFrame.center
         let fitScale: CGFloat = min(size.width / targetFrame.width, size.height / targetFrame.height)
         #warning("Fit Canvas with Angle")
         let fitAngle: Angle = .zero
