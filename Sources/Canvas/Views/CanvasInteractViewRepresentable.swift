@@ -158,7 +158,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     let interactionPosition0: CGPoint = canvas.coordinate.absolute(location: pinchInteraction.0.location)
                     let interactionPosition1: CGPoint = canvas.coordinate.absolute(location: pinchInteraction.0.location)
                     let interactionPosition: CGPoint = (interactionPosition0 + interactionPosition1) / 2
-                    canvas.delegate?.canvasMoveEnded(at: interactionPosition, coordinate: canvas.coordinate)
+                    canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
                     canvas.pinchInteraction = nil
                 }
             }
@@ -177,12 +177,12 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 let isInteracting: Bool = canvas.interactions.contains(panInteraction)
                 let interactionPosition: CGPoint = canvas.coordinate.absolute(location: panInteraction.location)
                 if !isInteracting {
-                    canvas.delegate?.canvasMoveEnded(at: interactionPosition, coordinate: canvas.coordinate)
+                    canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
                     canvas.panInteraction = nil
                 } else if !panInteraction.active {
                     if filteredPotentialPanInteractions.count == 1 {
                         canvas.panInteraction = nil
-                        canvas.delegate?.canvasMoveEnded(at: interactionPosition, coordinate: canvas.coordinate)
+                        canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
                     }
                 }
             }
@@ -190,7 +190,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 if filteredPotentialPanInteractions.count == 1 {
                     canvas.panInteraction = filteredPotentialPanInteractions[0]
                     let interactionPosition: CGPoint = canvas.coordinate.absolute(location: canvas.panInteraction!.location)
-                    canvas.delegate?.canvasMoveStarted(at: interactionPosition, coordinate: canvas.coordinate)
+                    canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
                 }
             }
             
@@ -235,7 +235,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         func didStartScroll() {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
-            canvas.delegate?.canvasMoveStarted(at: interactionPosition, coordinate: canvas.coordinate)
+            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, coordinate: canvas.coordinate)
         }
         
         func didScroll(_ velocity: CGVector) {
@@ -258,7 +258,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 snapToAngle(at: mouseLocation)
             }
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
-            canvas.delegate?.canvasMoveEnded(at: interactionPosition, coordinate: canvas.coordinate)
+            canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: true, coordinate: canvas.coordinate)
         }
         
         // MARK: - Drag
