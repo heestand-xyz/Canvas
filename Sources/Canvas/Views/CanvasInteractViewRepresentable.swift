@@ -101,7 +101,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                         }) {
                             dragPhysics = dragInteraction.drag.physics
                             let position: CGPoint = canvas.coordinate.absolute(location: interaction.location)
-                            canvas.delegate?.canvasDragReleased(dragInteraction.drag, at: position, coordinate: canvas.coordinate)
+                            canvas.delegate?.canvasDragReleased(dragInteraction.drag, at: position, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                         }
                         guard canvas.physics && dragPhysics != false else {
                             remove()
@@ -144,7 +144,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 let dragInteraction = CanvasDragInteraction(drag: drag, interaction: interaction)
                 canvas.dragInteractions.insert(dragInteraction)
                 let position: CGPoint = canvas.coordinate.absolute(location: interaction.location)
-                canvas.delegate?.canvasDragStarted(drag, at: position, coordinate: canvas.coordinate)
+                canvas.delegate?.canvasDragStarted(drag, at: position, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
             }
               
             /// Pinch
@@ -190,7 +190,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 if filteredPotentialPanInteractions.count == 1 {
                     canvas.panInteraction = filteredPotentialPanInteractions[0]
                     let interactionPosition: CGPoint = canvas.coordinate.absolute(location: canvas.panInteraction!.location)
-                    canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
+                    canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                 }
             }
             
@@ -235,7 +235,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         func didStartScroll() {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
-            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, coordinate: canvas.coordinate)
+            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
         
         func didScroll(_ velocity: CGVector) {
