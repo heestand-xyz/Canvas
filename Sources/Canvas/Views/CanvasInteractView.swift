@@ -13,6 +13,7 @@ class CanvasInteractView: MPView {
     #if os(macOS)
     var scrollTimer: Timer?
     let scrollTimeout: Double = 0.15
+    let scrollThreshold: CGFloat = 1.0
     #endif
 
     init(canvas: Canvas,
@@ -132,10 +133,12 @@ class CanvasInteractView: MPView {
     
     #if os(macOS)
     override func scrollWheel(with event: NSEvent) {
+        let vector: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
         if scrollTimer == nil {
+            guard max(abs(vector.dx), abs(vector.dy)) > scrollThreshold else { return }
             didStartScroll()
         }
-        didScroll(CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY))
+        didScroll(vector)
         scrollTimer?.invalidate()
         scrollTimer = Timer(timeInterval: scrollTimeout, repeats: false, block: { _ in
             self.scrollTimer = nil
