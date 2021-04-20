@@ -40,6 +40,7 @@ public struct CanvasPolyGrid: View {
             }
         }
         .canvasCoordinateRotationOffset(canvasCoordinate)
+        .drawingGroup()
     }
     
     func grid(at superScale: CGFloat = 1.0, lineWidth: CGFloat = .onePixel) -> some View {
