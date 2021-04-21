@@ -159,7 +159,9 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     let interactionPosition0: CGPoint = canvas.coordinate.absolute(location: pinchInteraction.0.location)
                     let interactionPosition1: CGPoint = canvas.coordinate.absolute(location: pinchInteraction.0.location)
                     let interactionPosition: CGPoint = (interactionPosition0 + interactionPosition1) / 2
+                    #if os(iOS)
                     canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
+                    #endif
                     canvas.pinchInteraction = nil
                 }
             }
@@ -178,12 +180,20 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 let isInteracting: Bool = canvas.interactions.contains(panInteraction)
                 let interactionPosition: CGPoint = canvas.coordinate.absolute(location: panInteraction.location)
                 if !isInteracting {
+                    #if os(iOS)
                     canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
+                    #elseif os(macOS)
+                    canvas.delegate?.canvasSelectionEnded(at: interactionPosition, coordinate: canvas.coordinate)
+                    #endif
                     canvas.panInteraction = nil
                 } else if !panInteraction.active {
                     if filteredPotentialPanInteractions.count == 1 {
-                        canvas.panInteraction = nil
+                        #if os(iOS)
                         canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
+                        #elseif os(macOS)
+                        canvas.delegate?.canvasSelectionEnded(at: interactionPosition, coordinate: canvas.coordinate)
+                        #endif
+                        canvas.panInteraction = nil
                     }
                 }
             }
@@ -191,7 +201,11 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 if filteredPotentialPanInteractions.count == 1 {
                     canvas.panInteraction = filteredPotentialPanInteractions[0]
                     let interactionPosition: CGPoint = canvas.coordinate.absolute(location: canvas.panInteraction!.location)
+                    #if os(iOS)
                     canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    #elseif os(macOS)
+                    canvas.delegate?.canvasSelectionStarted(at: interactionPosition, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    #endif
                 }
             }
             
@@ -416,9 +430,17 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             guard let panInteraction: CanvasInteraction = canvas.panInteraction else { return }
             
-            move(panInteraction)
+            #if os(iOS)
             
+            move(panInteraction)
             transformed()
+            
+            #elseif os(macOS)
+            
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: panInteraction.location)
+            canvas.delegate?.canvasSelectionChanged(to: interactionPosition, coordinate: canvas.coordinate)
+            
+            #endif
             
         }
         

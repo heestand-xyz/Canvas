@@ -16,8 +16,10 @@ public protocol CanvasDelegate: AnyObject {
     func canvasMoveStarted(at position: CGPoint, viaScroll: Bool, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
     func canvasMoveEnded(at position: CGPoint, viaScroll: Bool, coordinate: CanvasCoordinate)
     
-//    func canvasSelectionStarted(at position: CGPoint, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
-//    func canvasSelectionChanged(at position: CGPoint, coordinate: CanvasCoordinate)
-//    func canvasSelectionEnded(at position: CGPoint, coordinate: CanvasCoordinate)
+    #if os(macOS)
+    func canvasSelectionStarted(at position: CGPoint, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
+    func canvasSelectionChanged(to position: CGPoint, coordinate: CanvasCoordinate)
+    func canvasSelectionEnded(at position: CGPoint, coordinate: CanvasCoordinate)
+    #endif
     
 }
