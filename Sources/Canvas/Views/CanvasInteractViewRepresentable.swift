@@ -41,6 +41,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         let velocityRadiusThreshold: CGFloat = 0.02
         let snapAngleRadius: Angle = Angle(degrees: 5)
         let isOnGridRadiusThreshold: CGFloat = 0.2
+        let initialRelativeRotationThreshold: Angle = Angle(degrees: 2)
 
         @ObservedObject var canvas: Canvas
 
@@ -431,7 +432,17 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             scale(pinchInteraction)
             
-            rotate(pinchInteraction)
+            if pinchInteraction.0.initialRelativeRotationThresholdReached || {
+                let relativeAngle: Angle = relativeRotation(pinchInteraction)
+                if abs(relativeAngle.degrees) > initialRelativeRotationThreshold.degrees {
+                    pinchInteraction.0.initialRelativeRotationThresholdReached = true
+                    pinchInteraction.1.initialRelativeRotationThresholdReached = true
+                    return true
+                }
+                return false
+            }() {
+                rotate(pinchInteraction)
+            }
             
             transformed()
             
@@ -523,13 +534,20 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
         }
         
-        func rotate(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
+        func relativeRotation(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) -> Angle {
             
             let distanceDirection: CGPoint = pinchInteraction.0.location - pinchInteraction.1.location
             let lastDistanceDirection: CGPoint = pinchInteraction.0.lastLocation - pinchInteraction.1.lastLocation
             let angleInRadians: CGFloat = atan2(distanceDirection.y, distanceDirection.x)
             let lastAngleInRadians: CGFloat = atan2(lastDistanceDirection.y, lastDistanceDirection.x)
             let relativeAngle: Angle = Angle(radians: Double(angleInRadians - lastAngleInRadians))
+            
+            return relativeAngle
+        }
+        
+        func rotate(_ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
+        
+            let relativeAngle: Angle = relativeRotation(pinchInteraction)
             
             if isNaN(CGFloat(relativeAngle.degrees)) {
                 fatalError("NaNaN")

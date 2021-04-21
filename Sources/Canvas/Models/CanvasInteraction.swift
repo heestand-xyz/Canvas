@@ -3,6 +3,7 @@ import CoreGraphics
 #if os(iOS)
 import UIKit
 #endif
+import SwiftUI
 
 class CanvasInteraction: Identifiable {
     
@@ -23,6 +24,8 @@ class CanvasInteraction: Identifiable {
     
     /// absolute content space
     var contentCenterOffset: CGVector?
+    
+    var initialRelativeRotationThresholdReached: Bool = false
 
     var active: Bool
     var auto: Bool
