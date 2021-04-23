@@ -6,27 +6,51 @@ class CanvasInteractView: MPView {
     
     var canvas: Canvas
     var didMoveCanvasInteractions: (Set<CanvasInteraction>) -> ()
+    
     var didStartScroll: () -> ()
     var didScroll: (CGVector) -> ()
     var didEndScroll: () -> ()
     
-    #if os(macOS)
-    var scrollTimer: Timer?
-    let scrollTimeout: Double = 0.15
-    let scrollThreshold: CGFloat = 1.0
-    #endif
+    var didStartMagnify: () -> ()
+    var didMagnify: (CGFloat) -> ()
+    var didEndMagnify: () -> ()
+    
+    var didStartRotate: () -> ()
+    var didRotate: (CGFloat) -> ()
+    var didEndRotate: () -> ()
+    
+//    #if os(macOS)
+//    var scrollTimer: Timer?
+//    let scrollTimeout: Double = 0.15
+//    let scrollThreshold: CGFloat = 1.0
+//    #endif
 
     init(canvas: Canvas,
          didMoveCanvasInteractions: @escaping (Set<CanvasInteraction>) -> (),
          didStartScroll: @escaping () -> (),
          didScroll: @escaping (CGVector) -> (),
-         didEndScroll: @escaping () -> ()) {
+         didEndScroll: @escaping () -> (),
+         didStartMagnify: @escaping () -> (),
+         didMagnify: @escaping (CGFloat) -> (),
+         didEndMagnify: @escaping () -> (),
+         didStartRotate: @escaping () -> (),
+         didRotate: @escaping (CGFloat) -> (),
+         didEndRotate: @escaping () -> ()) {
         
         self.canvas = canvas
         self.didMoveCanvasInteractions = didMoveCanvasInteractions
+        
         self.didStartScroll = didStartScroll
         self.didScroll = didScroll
         self.didEndScroll = didEndScroll
+        
+        self.didStartMagnify = didStartMagnify
+        self.didMagnify = didMagnify
+        self.didEndMagnify = didEndMagnify
+        
+        self.didStartRotate = didStartRotate
+        self.didRotate = didRotate
+        self.didEndRotate = didEndRotate
 
         super.init(frame: .zero)
         
@@ -52,6 +76,9 @@ class CanvasInteractView: MPView {
     }
     
     #if os(iOS)
+    
+    // MARK: - Touch
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             let id = UUID()
@@ -61,6 +88,7 @@ class CanvasInteractView: MPView {
             canvas.interactions.insert(canvasInteraction)
         }
     }
+    
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         var movedCanvasInteractions: Set<CanvasInteraction> = []
         for touch in touches {
@@ -77,6 +105,7 @@ class CanvasInteractView: MPView {
         }
         didMoveCanvasInteractions(movedCanvasInteractions)
     }
+    
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             guard let canvasInteraction: CanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
@@ -85,6 +114,7 @@ class CanvasInteractView: MPView {
             canvasInteraction.active = false
         }
     }
+    
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             guard let canvasInteraction: CanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
@@ -93,19 +123,23 @@ class CanvasInteractView: MPView {
             canvasInteraction.active = false
         }
     }
-    #endif
     
-    #if os(macOS)
+    #elseif os(macOS)
+    
+    // MARK: - Mouse
+    
     override func mouseDown(with event: NSEvent) {
         let location: CGPoint = getMouseLocation(event: event)
         let id = UUID()
         let canvasInteraction = CanvasInteraction(id: id, location: location)
         canvas.interactions.insert(canvasInteraction)
     }
+    
     override func mouseUp(with event: NSEvent) {
         guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
+    
     override func mouseDragged(with event: NSEvent) {
         let location: CGPoint = getMouseLocation(event: event)
         guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
@@ -116,9 +150,11 @@ class CanvasInteractView: MPView {
         canvasInteraction.velocity = velocity
         didMoveCanvasInteractions([canvasInteraction])
     }
+    
     override func mouseMoved(with event: NSEvent) {
         canvas.mouseLocation = getMouseLocation(event: event)
     }
+    
     func getMouseLocation(event: NSEvent) -> CGPoint {
         guard let window: NSWindow = window else { return .zero }
         let mouseLocation: CGPoint = window.mouseLocationOutsideOfEventStream
@@ -129,26 +165,67 @@ class CanvasInteractView: MPView {
         let flippedLocation: CGPoint = CGPoint(x: location.x, y: bounds.size.height - location.y)
         return flippedLocation
     }
-    #endif
     
-    #if os(macOS)
+    // MARK: - Scroll
+    
     override func scrollWheel(with event: NSEvent) {
-        let vector: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
-        if scrollTimer == nil {
-            guard max(abs(vector.dx), abs(vector.dy)) > scrollThreshold else { return }
+//        if scrollTimer == nil {
+//            guard max(abs(vector.dx), abs(vector.dy)) > scrollThreshold else { return }
+//            didStartScroll()
+//        }
+        switch event.phase {
+        case .began:
             didStartScroll()
+        case .changed:
+            let delta: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
+            didScroll(delta)
+        case .ended, .cancelled:
+            didEndScroll()
+        default:
+            break
         }
-        didScroll(vector)
-        scrollTimer?.invalidate()
-        scrollTimer = Timer(timeInterval: scrollTimeout, repeats: false, block: { _ in
-            self.scrollTimer = nil
-            self.didEndScroll()
-        })
-        RunLoop.current.add(scrollTimer!, forMode: .common)
+//        scrollTimer?.invalidate()
+//        scrollTimer = Timer(timeInterval: scrollTimeout, repeats: false, block: { _ in
+//            self.scrollTimer = nil
+//            self.didEndScroll()
+//        })
+//        RunLoop.current.add(scrollTimer!, forMode: .common)
     }
-    #endif
     
-    #if os(macOS)
+    // MARK: - MAgnify
+    
+    override func magnify(with event: NSEvent) {
+        switch event.phase {
+        case .began:
+            didStartMagnify()
+        case .changed:
+            let delta: CGFloat = event.deltaZ
+            didMagnify(delta)
+        case .ended, .cancelled:
+            didEndMagnify()
+        default:
+            break
+        }
+    }
+    
+    // MARK: - Rotate
+    
+    override func rotate(with event: NSEvent) {
+        switch event.phase {
+        case .began:
+            didStartRotate()
+        case .changed:
+            let delta: CGFloat = event.deltaZ
+            didRotate(delta)
+        case .ended, .cancelled:
+            didEndRotate()
+        default:
+            break
+        }
+    }
+    
+    // MARK: - Flags
+    
     override func flagsChanged(with event: NSEvent) {
         var keyboardFlags: Set<CanvasKeyboardFlag> = []
         switch event.modifierFlags.intersection(.deviceIndependentFlagsMask) {
@@ -165,6 +242,7 @@ class CanvasInteractView: MPView {
         }
         canvas.keyboardFlags = keyboardFlags
     }
+    
     #endif
     
 }

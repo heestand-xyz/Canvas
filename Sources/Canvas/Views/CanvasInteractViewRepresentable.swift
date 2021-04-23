@@ -16,17 +16,34 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                            didMoveCanvasInteractions: context.coordinator.didMoveCanvasInteractions(_:),
                            didStartScroll: context.coordinator.didStartScroll,
                            didScroll: context.coordinator.didScroll(_:),
-                           didEndScroll: context.coordinator.didEndScroll)
+                           didEndScroll: context.coordinator.didEndScroll,
+                           didStartMagnify: context.coordinator.didStartMagnify,
+                           didMagnify: context.coordinator.didMagnify(_:),
+                           didEndMagnify: context.coordinator.didEndMagnify,
+                           didStartRotate: context.coordinator.didStartRotate,
+                           didRotate: context.coordinator.didRotate(_:),
+                           didEndRotate: context.coordinator.didEndRotate)
     }
     
     func updateView(_ canvasInteractView: CanvasInteractView, context: Context) {
         if context.coordinator.canvas != canvas {
             context.coordinator.canvas = canvas
+            
             canvasInteractView.canvas = canvas
+
             canvasInteractView.didMoveCanvasInteractions = context.coordinator.didMoveCanvasInteractions(_:)
+            
             canvasInteractView.didStartScroll = context.coordinator.didStartScroll
             canvasInteractView.didScroll = context.coordinator.didScroll(_:)
             canvasInteractView.didEndScroll = context.coordinator.didEndScroll
+            
+            canvasInteractView.didStartMagnify = context.coordinator.didStartMagnify
+            canvasInteractView.didMagnify = context.coordinator.didMagnify(_:)
+            canvasInteractView.didEndMagnify = context.coordinator.didEndMagnify
+            
+            canvasInteractView.didStartRotate = context.coordinator.didStartRotate
+            canvasInteractView.didRotate = context.coordinator.didRotate(_:)
+            canvasInteractView.didEndRotate = context.coordinator.didEndRotate
         }
     }
     
@@ -42,6 +59,8 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         let snapAngleRadius: Angle = Angle(degrees: 5)
         let isOnGridRadiusThreshold: CGFloat = 0.2
         let initialRelativeRotationThreshold: Angle = Angle(degrees: 2)
+        let magnifyMuliplier: CGFloat = 0.0025
+        let rotateMultipier: CGFloat = 0.035
 
         @ObservedObject var canvas: Canvas
 
@@ -247,6 +266,8 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
         }
         
+        // MARK: - Scroll
+        
         func didStartScroll() {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
@@ -254,12 +275,11 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         }
         
         func didScroll(_ velocity: CGVector) {
+            guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             if canvas.keyboardFlags.contains(.command) {
-                guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
                 let relativeScale: CGFloat = 1.0 + velocity.dy * 0.0025
                 scaleCanvas(by: relativeScale, at: mouseLocation)
             } else if canvas.keyboardFlags.contains(.option) {
-                guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
                 let relativeAngle: Angle = Angle(degrees: Double(velocity.dy) * 0.5)
                 rotateCanvas(by: relativeAngle, at: mouseLocation)
             } else {
@@ -272,6 +292,47 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             if canvas.keyboardFlags.contains(.option) {
                 snapToAngle(at: mouseLocation)
             }
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
+            canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: true, coordinate: canvas.coordinate)
+        }
+        
+        // MARK: - Magnify
+        
+        func didStartMagnify() {
+            guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
+            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+        }
+        
+        func didMagnify(_ velocity: CGFloat) {
+            guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
+            let relativeScale: CGFloat = 1.0 + velocity * magnifyMuliplier
+            scaleCanvas(by: relativeScale, at: mouseLocation)
+        }
+        
+        func didEndMagnify() {
+            guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
+            canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: true, coordinate: canvas.coordinate)
+        }
+        
+        // MARK: - Rotate
+        
+        func didStartRotate() {
+            guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
+            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+        }
+        
+        func didRotate(_ velocity: CGFloat) {
+            guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
+            let relativeAngle: Angle = Angle(radians: Double(velocity * rotateMultipier * -1))
+            rotateCanvas(by: relativeAngle, at: mouseLocation)
+        }
+        
+        func didEndRotate() {
+            guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
+            snapToAngle(at: mouseLocation)
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
             canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: true, coordinate: canvas.coordinate)
         }
