@@ -60,7 +60,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         let isOnGridRadiusThreshold: CGFloat = 0.2
         let initialRelativeRotationThreshold: Angle = Angle(degrees: 2)
         let magnifyMuliplier: CGFloat = 0.0025
-        let rotateMultipier: CGFloat = 0.035
+        let rotateMultipier: CGFloat = 0.025
 
         @ObservedObject var canvas: Canvas
 
