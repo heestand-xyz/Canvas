@@ -19,11 +19,11 @@ class CanvasInteractView: MPView {
     var didRotate: (CGFloat) -> ()
     var didEndRotate: () -> ()
     
-//    #if os(macOS)
-//    var scrollTimer: Timer?
-//    let scrollTimeout: Double = 0.15
-//    let scrollThreshold: CGFloat = 1.0
-//    #endif
+    #if os(macOS)
+    var scrollTimer: Timer?
+    let scrollTimeout: Double = 0.15
+    let scrollThreshold: CGFloat = 1.0
+    #endif
 
     init(canvas: Canvas,
          didMoveCanvasInteractions: @escaping (Set<CanvasInteraction>) -> (),
@@ -169,27 +169,22 @@ class CanvasInteractView: MPView {
     // MARK: - Scroll
     
     override func scrollWheel(with event: NSEvent) {
-//        if scrollTimer == nil {
-//            guard max(abs(vector.dx), abs(vector.dy)) > scrollThreshold else { return }
-//            didStartScroll()
-//        }
-        switch event.phase {
-        case .began:
+        
+        let delta: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
+        
+        if scrollTimer == nil {
+            guard max(abs(delta.dx), abs(delta.dy)) > scrollThreshold else { return }
             didStartScroll()
-        case .changed:
-            let delta: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
-            didScroll(delta)
-        case .ended, .cancelled:
-            didEndScroll()
-        default:
-            break
         }
-//        scrollTimer?.invalidate()
-//        scrollTimer = Timer(timeInterval: scrollTimeout, repeats: false, block: { _ in
-//            self.scrollTimer = nil
-//            self.didEndScroll()
-//        })
-//        RunLoop.current.add(scrollTimer!, forMode: .common)
+        
+        didScroll(delta)
+        
+        scrollTimer?.invalidate()
+        scrollTimer = Timer(timeInterval: scrollTimeout, repeats: false, block: { _ in
+            self.scrollTimer = nil
+            self.didEndScroll()
+        })
+        RunLoop.current.add(scrollTimer!, forMode: .common)
     }
     
     // MARK: - MAgnify
