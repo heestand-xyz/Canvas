@@ -58,7 +58,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         let velocityRadiusThreshold: CGFloat = 0.02
         let snapAngleRadius: Angle = Angle(degrees: 5)
         let isOnGridRadiusThreshold: CGFloat = 0.2
-        let initialRelativeRotationThreshold: Angle = Angle(degrees: 2)
+        let initialRelativeRotationThreshold: Angle = Angle(degrees: 3)
         let magnifyMuliplier: CGFloat = 0.0025
         let rotateMultipier: CGFloat = 0.025
 
