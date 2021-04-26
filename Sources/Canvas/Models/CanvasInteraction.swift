@@ -25,7 +25,8 @@ class CanvasInteraction: Identifiable {
     /// absolute content space
     var contentCenterOffset: CGVector?
     
-    var initialRelativeRotationThresholdReached: Bool = false
+    var initialRotation: Angle = .zero
+    var initialRotationThresholdReached: Bool = false
 
     var active: Bool
     var auto: Bool

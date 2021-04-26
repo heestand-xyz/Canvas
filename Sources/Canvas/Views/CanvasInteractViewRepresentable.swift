@@ -58,7 +58,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         let velocityRadiusThreshold: CGFloat = 0.02
         let snapAngleRadius: Angle = Angle(degrees: 5)
         let isOnGridRadiusThreshold: CGFloat = 0.2
-        let initialRelativeRotationThreshold: Angle = Angle(degrees: 3)
+        let initialRotationThreshold: Angle = Angle(degrees: 7.5)
         let magnifyMuliplier: CGFloat = 0.0025
         let rotateMultipier: CGFloat = 0.025
 
@@ -252,7 +252,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             /// Pinch
             if let pinchInteraction: (CanvasInteraction, CanvasInteraction) = canvas.pinchInteraction,
-               interactions.contains(pinchInteraction.0) && interactions.contains(pinchInteraction.1),
+               interactions.contains(pinchInteraction.0) || interactions.contains(pinchInteraction.1),
                pinchInteraction.0.active && pinchInteraction.1.active {
                 pinch()
             }
@@ -515,11 +515,15 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             scale(pinchInteraction)
             
-            if pinchInteraction.0.initialRelativeRotationThresholdReached || {
+            if pinchInteraction.0.initialRotationThresholdReached || {
                 let relativeAngle: Angle = relativeRotation(pinchInteraction)
-                if abs(relativeAngle.degrees) > initialRelativeRotationThreshold.degrees {
-                    pinchInteraction.0.initialRelativeRotationThresholdReached = true
-                    pinchInteraction.1.initialRelativeRotationThresholdReached = true
+                let initialRotation: Angle = pinchInteraction.0.initialRotation + relativeAngle
+                pinchInteraction.0.initialRotation = initialRotation
+                if abs(initialRotation.degrees) > initialRotationThreshold.degrees {
+                    pinchInteraction.0.initialRotationThresholdReached = true
+                    CanvasAnimation.animate(for: 0.25, ease: .easeInOut) { fraction, relativeFraction in
+                        self.rotate(relativeAngle: Angle(degrees: initialRotation.degrees * Double(relativeFraction)), pinchInteraction)
+                    }
                     return true
                 }
                 return false
@@ -632,6 +636,11 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         
             let relativeAngle: Angle = relativeRotation(pinchInteraction)
             
+            rotate(relativeAngle: relativeAngle, pinchInteraction)
+        }
+        
+        func rotate(relativeAngle: Angle, _ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
+        
             if isNaN(CGFloat(relativeAngle.degrees)) {
                 fatalError("NaNaN")
             }
