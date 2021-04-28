@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import CoreGraphicsExtensions
+import MultiViews
 
 public class Canvas: ObservableObject, Identifiable {
     
@@ -97,15 +98,18 @@ public extension Canvas {
         
         guard size != .zero else { return .zero }
         
-        let targetScale: CGFloat = min(size.width / frame.width, size.height / frame.height)
-        let targetFrame: CGRect = CGRect(origin: frame.origin - padding / targetScale,
-                                         size: frame.size + (padding * 2) / targetScale)
+        let targetScale: CGFloat = min(size.width / frame.width,
+                                       size.height / frame.height)
+        let targetFrame: CGRect = CGRect(origin: frame.origin - padding * targetScale,
+                                         size: frame.size + (padding * 2) * targetScale)
 
-        let fitOffset: CGPoint = size / 2 + targetFrame.center
-        let fitScale: CGFloat = min(size.width / targetFrame.width, size.height / targetFrame.height)
-        #warning("Fit Canvas with Angle")
+        let fitScale: CGFloat = min(size.width / targetFrame.width,
+                                    size.height / targetFrame.height)
+        let fitOffset: CGPoint = size / 2 - targetFrame.center * fitScale
         let fitAngle: Angle = .zero
-        let fitCoordinate = CanvasCoordinate(offset: fitOffset, scale: fitScale, angle: fitAngle)
+        let fitCoordinate = CanvasCoordinate(offset: fitOffset,
+                                             scale: fitScale,
+                                             angle: fitAngle)
 
         return fitCoordinate
     }
