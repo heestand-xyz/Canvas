@@ -156,6 +156,7 @@ class CanvasInteractView: MPView {
     }
     
     func getMouseLocation(event: NSEvent) -> CGPoint {
+        #warning("Bad Location with Defocused Window")
         guard let window: NSWindow = window else { return .zero }
         let mouseLocation: CGPoint = window.mouseLocationOutsideOfEventStream
         guard let vcView: NSView = window.contentViewController?.view else { return .zero }
