@@ -29,13 +29,15 @@ public class Canvas: ObservableObject, Identifiable {
     /// Only used for centering.
     @Published public var size: CGSize = .zero
     
+    public var center: CGPoint { offset + size / 2 }
+    
     @Published var interactions: Set<CanvasInteraction> = []
     @Published var panInteraction: CanvasInteraction? = nil
     @Published var pinchInteraction: (CanvasInteraction, CanvasInteraction)? = nil
     @Published var dragInteractions: Set<CanvasDragInteraction> = []
     
-    @Published var keyboardFlags: Set<CanvasKeyboardFlag> = []
-    @Published var mouseLocation: CGPoint? = nil
+    @Published public var keyboardFlags: Set<CanvasKeyboardFlag> = []
+    @Published public var mouseLocation: CGPoint? = nil
 
     public init(physics: Bool = false, snapGridToAngle: Angle? = nil) {
         self.id = UUID()
@@ -50,6 +52,36 @@ extension Canvas: Equatable {
     
     public static func == (lhs: Canvas, rhs: Canvas) -> Bool {
         lhs.id == rhs.id
+    }
+}
+
+// MARK: - Snap to Grid
+
+extension Canvas {
+    
+    public static func snapToGrid(position: CGPoint, snapGrid: CanvasSnapGrid) -> CGPoint {
+        
+        let snapPosition: CGPoint
+        switch snapGrid {
+        case .square(size: let size):
+            snapPosition = CGPoint(x: round(position.x / size) * size,
+                                   y: round(position.y / size) * size)
+        case .triangle(size: let size):
+            let width: CGFloat = size / sqrt(0.75)
+            let height: CGFloat = size
+            let snapPositionA = CGPoint(x: round(position.x / width) * width,
+                                        y: round(position.y / (height * 2)) * (height * 2))
+            let snapPositionB = CGPoint(x: round((position.x - width / 2) / width) * width + (width / 2),
+                                        y: round((position.y - height) / (height * 2)) * (height * 2) + height)
+            if CanvasCoordinate.distance(from: snapPositionA, to: position) < CanvasCoordinate.distance(from: snapPositionB, to: position) {
+                snapPosition = snapPositionA
+            } else {
+                snapPosition = snapPositionB
+            }
+        }
+        
+        return snapPosition
+        
     }
 }
 

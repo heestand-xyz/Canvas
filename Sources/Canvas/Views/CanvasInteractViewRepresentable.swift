@@ -401,7 +401,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             let predictedInteractionPosition: CGPoint = canvas.coordinate.absolute(location: predictedEndLocation)
             let predictedPosition: CGPoint = predictedInteractionPosition - interactionCenterOffset
-            let predictedSnapPosition: CGPoint = snapToGridPosition(around: predictedPosition, snapGrid: snapGrid)
+            let predictedSnapPosition: CGPoint = Canvas.snapToGrid(position: predictedPosition, snapGrid: snapGrid)
             
             let predictedDifference: CGPoint = canvas.coordinate.relative(position: predictedPosition) - canvas.coordinate.relative(position: position)
             let predictedSnapDifference: CGPoint = canvas.coordinate.relative(position: predictedSnapPosition) - canvas.coordinate.relative(position: position)
@@ -429,7 +429,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         
         func isOnGrid(position: CGPoint, snapGrid: CanvasSnapGrid) -> Bool {
             
-            let snapPosition: CGPoint = snapToGridPosition(around: position, snapGrid: snapGrid)
+            let snapPosition: CGPoint = Canvas.snapToGrid(position: position, snapGrid: snapGrid)
             let difference: CGPoint = snapPosition - position
             let distance: CGFloat = sqrt(pow(difference.x, 2.0) + pow(difference.y, 2.0))
             return distance < isOnGridRadiusThreshold
@@ -447,7 +447,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             guard let snapGrid: CanvasSnapGrid = dragInteraction.drag.snapGrid else { return }
             
             guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag, coordinate: canvas.coordinate) else { return }
-            let snapPosition: CGPoint = snapToGridPosition(around: position, snapGrid: snapGrid)
+            let snapPosition: CGPoint = Canvas.snapToGrid(position: position, snapGrid: snapGrid)
             
             CanvasAnimation.animate(for: 0.25, ease: .easeOut) { fraction in
                 
@@ -457,31 +457,6 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             } done: {
                 done()
             }
-            
-        }
-        
-        func snapToGridPosition(around position: CGPoint, snapGrid: CanvasSnapGrid) -> CGPoint {
-            
-            let snapPosition: CGPoint
-            switch snapGrid {
-            case .square(size: let size):
-                snapPosition = CGPoint(x: round(position.x / size) * size,
-                                       y: round(position.y / size) * size)
-            case .triangle(size: let size):
-                let width: CGFloat = size / sqrt(0.75)
-                let height: CGFloat = size
-                let snapPositionA = CGPoint(x: round(position.x / width) * width,
-                                            y: round(position.y / (height * 2)) * (height * 2))
-                let snapPositionB = CGPoint(x: round((position.x - width / 2) / width) * width + (width / 2),
-                                            y: round((position.y - height) / (height * 2)) * (height * 2) + height)
-                if CanvasCoordinate.distance(from: snapPositionA, to: position) < CanvasCoordinate.distance(from: snapPositionB, to: position) {
-                    snapPosition = snapPositionA
-                } else {
-                    snapPosition = snapPositionB
-                }
-            }
-            
-            return snapPosition
             
         }
         
