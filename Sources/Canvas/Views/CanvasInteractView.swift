@@ -22,7 +22,7 @@ class CanvasInteractView: MPView {
     #if os(macOS)
     var scrollTimer: Timer?
     let scrollTimeout: Double = 0.15
-    let scrollThreshold: CGFloat = 1.0
+    let scrollThreshold: CGFloat = 1.5
     #endif
 
     init(canvas: Canvas,
