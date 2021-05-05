@@ -272,6 +272,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
             canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+            print("...mouseLocation:", mouseLocation)
         }
         
         func didScroll(_ velocity: CGVector) {

@@ -89,12 +89,12 @@ extension Canvas {
 
 public extension Canvas {
     
-    func move(to coordinate: CanvasCoordinate, animated: Bool = false) {
+    func move(to coordinate: CanvasCoordinate, animatedDuration: CGFloat? = nil) {
         let currentOffset: CGPoint = self.offset
         let currentScale: CGFloat = self.scale
         let currentAngle: Angle = self.angle
-        if animated {
-            CanvasAnimation.animate(for: 0.25, ease: .easeInOut) { fraction in
+        if let duration: CGFloat = animatedDuration {
+            CanvasAnimation.animate(for: duration, ease: .easeInOut) { fraction in
                 self.offset = currentOffset * (1.0 - fraction) + coordinate.offset * fraction
                 self.scale = currentScale * (1.0 - fraction) + coordinate.scale * fraction
                 self.angle = Angle(degrees: currentAngle.degrees * Double(1.0 - fraction) + coordinate.angle.degrees * Double(fraction))
@@ -117,7 +117,7 @@ public extension Canvas {
     }
     
     func resetToOrigin(animated: Bool = false) {
-        move(to: originCoordinate, animated: animated)
+        move(to: originCoordinate, animatedDuration: animated ? 0.25 : nil)
     }
     
 }
@@ -147,6 +147,6 @@ public extension Canvas {
     }
     
     func fit(in frame: CGRect, padding: CGFloat, animated: Bool = false) {
-        move(to: fitCoordinate(in: frame, padding: padding), animated: animated)
+        move(to: fitCoordinate(in: frame, padding: padding), animatedDuration: animated ? 0.25 : nil)
     }
 }
