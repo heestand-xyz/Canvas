@@ -3,9 +3,9 @@ import CoreGraphicsExtensions
 import SwiftUI
 
 public struct CanvasCoordinate {
-    public let offset: CGPoint
-    public let scale: CGFloat
-    public let angle: Angle
+    public var offset: CGPoint
+    public var scale: CGFloat
+    public var angle: Angle
     public init(offset: CGPoint, scale: CGFloat, angle: Angle) {
         self.offset = offset
         self.scale = scale
