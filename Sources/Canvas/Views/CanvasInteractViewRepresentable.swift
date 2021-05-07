@@ -112,9 +112,12 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     }
                 }
                 
-                if !interaction.active {
+                if !interaction.active || interaction.timeout {
                     
-                    if !interaction.auto {
+                    if !interaction.auto || interaction.timeout {
+                        if interaction.timeout {
+                            print("Interaction Timeout")
+                        }
                         var dragPhysics: Bool?
                         if let dragInteraction: CanvasDragInteraction = canvas.dragInteractions.first(where: { dragInteraction in
                             dragInteraction.interaction == interaction

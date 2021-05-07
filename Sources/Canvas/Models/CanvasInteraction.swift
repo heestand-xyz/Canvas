@@ -9,7 +9,11 @@ class CanvasInteraction: Identifiable {
     
     let id: UUID
     
-    var location: CGPoint
+    var location: CGPoint {
+        didSet {
+            refreshTimeout()
+        }
+    }
     var lastLocation: CGPoint {
         CGPoint(x: location.x - velocity.dx,
                 y: location.y - velocity.dy)
@@ -35,6 +39,10 @@ class CanvasInteraction: Identifiable {
     var touch: UITouch?
     #endif
     
+    private static let timeoutDuration: Double = 10.0
+    var timeout: Bool = false
+    private var timeoutTimer: Timer?
+    
     init(id: UUID,
          location: CGPoint) {
         self.id = id
@@ -42,6 +50,16 @@ class CanvasInteraction: Identifiable {
         self.velocity = CGVector(dx: 0.0, dy: 0.0)
         self.active = true
         self.auto = false
+        refreshTimeout()
+    }
+    
+    private func refreshTimeout() {
+        timeoutTimer?.invalidate()
+        timeoutTimer = Timer(timeInterval: CanvasInteraction.timeoutDuration, repeats: false, block: { [weak self] _ in
+            self?.timeout = true
+            self?.timeoutTimer = nil
+        })
+        RunLoop.current.add(timeoutTimer!, forMode: .common)
     }
     
 }
