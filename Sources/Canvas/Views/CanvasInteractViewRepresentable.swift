@@ -116,7 +116,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     
                     if !interaction.auto || interaction.timeout {
                         if interaction.timeout {
-                            print("Interaction Timeout")
+                            print("Canvas Interaction Timeout")
                         }
                         var dragPhysics: Bool?
                         if let dragInteraction: CanvasDragInteraction = canvas.dragInteractions.first(where: { dragInteraction in
@@ -366,7 +366,8 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             let offset: CGVector = canvas.coordinate.scaleRotate(interaction.velocity)
             if isNaN(offset.dx) || isNaN(offset.dy) {
-                fatalError("NaNaN")
+                print("Canvas Drag by NaN")
+                return
             }
             
             canvas.delegate?.canvasDragSetPosition(dragInteraction.drag, to: position + offset, coordinate: canvas.coordinate)
@@ -382,7 +383,8 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                         
             let center: CGPoint = canvas.coordinate.absolute(location: interaction.location) - contentCenterOffset
             if isNaN(center.x) || isNaN(center.y) {
-                fatalError("NaNaN")
+                print("Canvas Abolute Drag by NaN")
+                return
             }
             
             canvas.delegate?.canvasDragSetPosition(dragInteraction.drag, to: center, coordinate: canvas.coordinate)
@@ -573,7 +575,8 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             let relativeScale: CGFloat = distance / lastDistance
             
             if isNaN(relativeScale) {
-                fatalError("NaNaN")
+                print("Canvas Scale by NaN")
+                return
             }
             
             let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
@@ -621,7 +624,8 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         func rotate(relativeAngle: Angle, _ pinchInteraction: (CanvasInteraction, CanvasInteraction)) {
         
             if isNaN(CGFloat(relativeAngle.degrees)) {
-                fatalError("NaNaN")
+                print("Canvas Rotate by NaN")
+                return
             }
             
             let averageLocation: CGPoint = (pinchInteraction.0.location + pinchInteraction.1.location) / 2.0
@@ -654,7 +658,8 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         func offsetCanvas(by offset: CGVector) {
             
             if isNaN(offset.dx) || isNaN(offset.dy) {
-                fatalError("NaNaN")
+                print("Canvas Offset by NaN")
+                return
             }
             
             canvas.offset += offset
