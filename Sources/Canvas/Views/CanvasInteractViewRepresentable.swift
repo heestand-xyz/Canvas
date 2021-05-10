@@ -56,7 +56,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         let velocityStartDampenThreshold: CGFloat = 2.5
         let velocityDampening: CGFloat = 0.98
         let velocityRadiusThreshold: CGFloat = 0.02
-        let snapAngleRadius: Angle = Angle(degrees: 5)
+        let snapAngleThreshold: Angle = Angle(degrees: 5)
         let isOnGridRadiusThreshold: CGFloat = 0.2
         let initialRotationThreshold: Angle = Angle(degrees: 7.5)
         let magnifyMuliplier: CGFloat = 0.0025
@@ -532,18 +532,32 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         func snapToAngle(at location: CGPoint) {
             guard let snapAngle: Angle = canvas.snapGridToAngle else { return }
             let count: Int = Int(360.0 / snapAngle.degrees)
-            let angles: [Angle] = (0..<count).map { index in
-                Angle(degrees: snapAngle.degrees * Double(index))
+            let angles: [Angle] = ((count / -2)...(count / 2)).map { offset in
+                Angle(degrees: snapAngle.degrees * Double(offset))
             }
+            func narrow(angle: Angle) -> Angle {
+                var angle: Angle = angle
+                while !(-180.0...180).contains(angle.degrees) {
+                    if angle.degrees > 180 {
+                        angle -= Angle(degrees: 360)
+                    } else if angle.degrees < -180 {
+                        angle += Angle(degrees: 360)
+                    }
+                }
+                return angle
+            }
+            let narrowCanvasAngle: Angle = narrow(angle: canvas.angle)
             for angle in angles {
-                if canvas.angle > (angle - snapAngleRadius) && canvas.angle < (angle + snapAngleRadius) {
+                let angleDiff: Angle = Angle(degrees: abs(narrowCanvasAngle.degrees - angle.degrees))
+                if angleDiff < snapAngleThreshold {
                     let currentAngle: Angle = canvas.angle
                     let currentOffset: CGPoint = canvas.offset
-                    let relativeAngle: Angle = angle - currentAngle
+                    let relativeAngle: Angle = angle - narrowCanvasAngle
+                    let newAngle: Angle = currentAngle + relativeAngle
                     let offset: CGPoint = currentOffset + rotationOffset(relativeAngle: relativeAngle, at: location)
                     CanvasAnimation.animate(for: 0.25, ease: .easeOut) { fraction in
                         self.canvas.offset = currentOffset * (1.0 - fraction) + offset * fraction
-                        self.canvas.angle = currentAngle * Double(1.0 - fraction) + angle * Double(fraction)
+                        self.canvas.angle = currentAngle * Double(1.0 - fraction) + newAngle * Double(fraction)
                     } done: {}
                     break
                 }
