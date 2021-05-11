@@ -156,12 +156,18 @@ class CanvasInteractView: MPView {
     }
     
     func getMouseLocation(event: NSEvent) -> CGPoint {
-        #warning("Bad Location with Defocused Window")
-        guard let window: NSWindow = window else { return .zero }
+        guard let window: NSWindow = window else {
+            return .zero
+        }
         let mouseLocation: CGPoint = window.mouseLocationOutsideOfEventStream
-        guard let vcView: NSView = window.contentViewController?.view else { return .zero }
-        let point: CGPoint = convert(.zero, to: vcView)
-        let origin: CGPoint = CGPoint(x: point.x, y: vcView.bounds.size.height - point.y)
+        guard let windowView: NSView = window.contentView else {
+            return .zero
+        }
+        var point: CGPoint = convert(.zero, to: windowView)
+        if point.y == 0.0 {
+            point = convert(CGPoint(x: 0.0, y: windowView.bounds.height), to: windowView)
+        }
+        let origin: CGPoint = CGPoint(x: point.x, y: windowView.bounds.size.height - point.y)
         let location: CGPoint = mouseLocation - origin
         let flippedLocation: CGPoint = CGPoint(x: location.x, y: bounds.size.height - location.y)
         return flippedLocation
