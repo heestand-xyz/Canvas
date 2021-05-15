@@ -129,7 +129,7 @@ class CanvasInteractView: MPView {
     // MARK: - Mouse
     
     override func mouseDown(with event: NSEvent) {
-        let location: CGPoint = getMouseLocation(event: event)
+        guard let location: CGPoint = getMouseLocation(event: event) else { return }
         let id = UUID()
         let canvasInteraction = CanvasInteraction(id: id, location: location)
         canvas.interactions.insert(canvasInteraction)
@@ -141,7 +141,7 @@ class CanvasInteractView: MPView {
     }
     
     override func mouseDragged(with event: NSEvent) {
-        let location: CGPoint = getMouseLocation(event: event)
+        guard let location: CGPoint = getMouseLocation(event: event) else { return }
         guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
         let lastLocation: CGPoint = canvasInteraction.location
         canvasInteraction.location = location
@@ -155,14 +155,10 @@ class CanvasInteractView: MPView {
         canvas.mouseLocation = getMouseLocation(event: event)
     }
     
-    func getMouseLocation(event: NSEvent) -> CGPoint {
-        guard let window: NSWindow = window else {
-            return .zero
-        }
+    func getMouseLocation(event: NSEvent) -> CGPoint? {
+        guard let window: NSWindow = canvas.window else { return nil }
         let mouseLocation: CGPoint = window.mouseLocationOutsideOfEventStream
-        guard let windowView: NSView = window.contentView else {
-            return .zero
-        }
+        guard let windowView: NSView = window.contentView else { return nil }
         var point: CGPoint = convert(.zero, to: windowView)
         if point.y == 0.0 {
             point = convert(CGPoint(x: 0.0, y: windowView.bounds.height), to: windowView)

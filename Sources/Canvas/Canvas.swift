@@ -12,6 +12,10 @@ public class Canvas: ObservableObject, Identifiable {
     let physics: Bool
     let snapGridToAngle: Angle?
     
+    #if os(macOS)
+    public var window: NSWindow?
+    #endif
+    
     @Published public var offset: CGPoint = .zero
     @Published public var scale: CGFloat = 1.0
     @Published public var angle: Angle = .zero
