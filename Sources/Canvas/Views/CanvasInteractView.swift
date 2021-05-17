@@ -156,13 +156,16 @@ class CanvasInteractView: MPView {
     }
     
     func getMouseLocation(event: NSEvent) -> CGPoint? {
-        guard let window: NSWindow = canvas.window else { return nil }
+        if window == nil || canvas.window == nil {
+            print("Some Mouse Window is Missing",
+                  window == nil ? "(View Window Missing)" : "",
+                  canvas.window == nil ? "(Canvas Window Missing)" : "")
+        }
+        guard let window: NSWindow = canvas.window ?? window else { return nil }
         let mouseLocation: CGPoint = window.mouseLocationOutsideOfEventStream
         guard let windowView: NSView = window.contentView else { return nil }
         var point: CGPoint = convert(.zero, to: windowView)
-        if point.y == 0.0 {
-            point = convert(CGPoint(x: 0.0, y: windowView.bounds.height), to: windowView)
-        }
+        if point.y == 0.0 { point = convert(CGPoint(x: 0.0, y: windowView.bounds.height), to: windowView) }
         let origin: CGPoint = CGPoint(x: point.x, y: windowView.bounds.size.height - point.y)
         let location: CGPoint = mouseLocation - origin
         let flippedLocation: CGPoint = CGPoint(x: location.x, y: bounds.size.height - location.y)
