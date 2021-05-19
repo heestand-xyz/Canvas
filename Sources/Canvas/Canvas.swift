@@ -3,7 +3,7 @@ import SwiftUI
 import CoreGraphicsExtensions
 import MultiViews
 
-public class Canvas: ObservableObject, Identifiable {
+public class Canvas: ObservableObject, Codable, Identifiable {
     
     public weak var delegate: CanvasDelegate?
     
@@ -48,14 +48,64 @@ public class Canvas: ObservableObject, Identifiable {
         self.physics = physics
         self.snapGridToAngle = snapGridToAngle
     }
-}
+    
+    // MARK: Codable
+    
+    enum CodingKeys: CodingKey {
+        case id
+        case physics
+        case snapGridToAngle
+        case offset
+        case scale
+        case angle
+    }
 
-// MARK: - Equatable
+    public required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(UUID.self, forKey: .id)
+        physics = try container.decode(Bool.self, forKey: .physics)
+        if let degrees = try container.decode(Double?.self, forKey: .snapGridToAngle) {
+            snapGridToAngle = Angle(degrees: degrees)
+        } else {
+            snapGridToAngle = nil
+        }
+        offset = try container.decode(CGPoint.self, forKey: .offset)
+        scale = try container.decode(CGFloat.self, forKey: .scale)
+        angle = Angle(degrees: try container.decode(Double.self, forKey: .angle))
+
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(physics, forKey: .physics)
+        try container.encode(snapGridToAngle?.degrees, forKey: .snapGridToAngle)
+        try container.encode(offset, forKey: .offset)
+        try container.encode(scale, forKey: .scale)
+        try container.encode(angle.degrees, forKey: .angle)
+
+    }
+}
 
 extension Canvas: Equatable {
     
     public static func == (lhs: Canvas, rhs: Canvas) -> Bool {
         lhs.id == rhs.id
+    }
+}
+
+extension Canvas: Hashable {
+        
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(physics)
+        hasher.combine(snapGridToAngle)
+        hasher.combine(offset.x)
+        hasher.combine(offset.y)
+        hasher.combine(scale)
+        hasher.combine(angle)
     }
 }
 
