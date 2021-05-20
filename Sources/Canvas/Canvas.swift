@@ -9,7 +9,7 @@ public class Canvas: ObservableObject, Codable, Identifiable {
     
     public let id: UUID
     
-    let physics: Bool
+    var physics: Bool = iOS
     let snapGridToAngle: Angle?
     
     #if os(macOS)
@@ -32,7 +32,7 @@ public class Canvas: ObservableObject, Codable, Identifiable {
     
     /// Only used for centering.
     @Published public var size: CGSize = .zero
-    
+
     public var center: CGPoint { offset + size / 2 }
     
     @Published var interactions: Set<CanvasInteraction> = []
@@ -43,7 +43,7 @@ public class Canvas: ObservableObject, Codable, Identifiable {
     @Published public var keyboardFlags: Set<CanvasKeyboardFlag> = []
     @Published public var mouseLocation: CGPoint? = nil
 
-    public init(physics: Bool = false, snapGridToAngle: Angle? = nil) {
+    public init(physics: Bool = iOS, snapGridToAngle: Angle? = nil) {
         self.id = UUID()
         self.physics = physics
         self.snapGridToAngle = snapGridToAngle
@@ -53,8 +53,8 @@ public class Canvas: ObservableObject, Codable, Identifiable {
     
     enum CodingKeys: CodingKey {
         case id
-        case physics
         case snapGridToAngle
+        case size
         case offset
         case scale
         case angle
@@ -64,7 +64,6 @@ public class Canvas: ObservableObject, Codable, Identifiable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         id = try container.decode(UUID.self, forKey: .id)
-        physics = try container.decode(Bool.self, forKey: .physics)
         if let degrees = try container.decode(Double?.self, forKey: .snapGridToAngle) {
             snapGridToAngle = Angle(degrees: degrees)
         } else {
@@ -74,14 +73,17 @@ public class Canvas: ObservableObject, Codable, Identifiable {
         scale = try container.decode(CGFloat.self, forKey: .scale)
         angle = Angle(degrees: try container.decode(Double.self, forKey: .angle))
 
+        let savedAtSize = try container.decode(CGSize.self, forKey: .size)
+        offset -= savedAtSize / 2
+        
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         try container.encode(id, forKey: .id)
-        try container.encode(physics, forKey: .physics)
         try container.encode(snapGridToAngle?.degrees, forKey: .snapGridToAngle)
+        try container.encode(size, forKey: .size)
         try container.encode(offset, forKey: .offset)
         try container.encode(scale, forKey: .scale)
         try container.encode(angle.degrees, forKey: .angle)
