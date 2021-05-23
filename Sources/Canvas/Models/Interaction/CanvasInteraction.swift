@@ -4,6 +4,16 @@ import CoreGraphics
 import UIKit
 #endif
 import SwiftUI
+import MultiViews
+
+public struct CanvasInteractionInfo {
+    public let view: MPView
+    #if os(macOS)
+    public let event: NSEvent
+    /// Right mouse click.
+    public let isAlternative: Bool
+    #endif
+}
 
 class CanvasInteraction: Identifiable {
     
@@ -39,17 +49,21 @@ class CanvasInteraction: Identifiable {
     var touch: UITouch?
     #endif
     
+    let info: CanvasInteractionInfo
+    
     private static let timeoutDuration: Double = 10.0
     var timeout: Bool = false
     private var timeoutTimer: Timer?
     
     init(id: UUID,
-         location: CGPoint) {
+         location: CGPoint,
+         info: CanvasInteractionInfo) {
         self.id = id
         self.location = location
         self.velocity = CGVector(dx: 0.0, dy: 0.0)
         self.active = true
         self.auto = false
+        self.info = info
         refreshTimeout()
     }
     

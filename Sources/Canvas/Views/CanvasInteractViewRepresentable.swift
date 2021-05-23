@@ -205,7 +205,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     #if os(iOS)
                     canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
                     #elseif os(macOS)
-                    canvas.delegate?.canvasSelectionEnded(at: interactionPosition, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    canvas.delegate?.canvasSelectionEnded(at: interactionPosition, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #endif
                     canvas.panInteraction = nil
                 } else if !panInteraction.active {
@@ -213,7 +213,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                         #if os(iOS)
                         canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
                         #elseif os(macOS)
-                        canvas.delegate?.canvasSelectionEnded(at: interactionPosition, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                        canvas.delegate?.canvasSelectionEnded(at: interactionPosition, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                         #endif
                         canvas.panInteraction = nil
                     }
@@ -226,7 +226,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     #if os(iOS)
                     canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #elseif os(macOS)
-                    canvas.delegate?.canvasSelectionStarted(at: interactionPosition, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    canvas.delegate?.canvasSelectionStarted(at: interactionPosition, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #endif
                 }
             }

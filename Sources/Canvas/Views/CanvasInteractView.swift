@@ -83,7 +83,7 @@ class CanvasInteractView: MPView {
         for touch in touches {
             let id = UUID()
             let location: CGPoint = touch.location(in: self)
-            let canvasInteraction = CanvasInteraction(id: id, location: location)
+            let canvasInteraction = CanvasInteraction(id: id, location: location, info: CanvasInteractionInfo(view: self))
             canvasInteraction.touch = touch
             canvas.interactions.insert(canvasInteraction)
         }
@@ -131,11 +131,23 @@ class CanvasInteractView: MPView {
     override func mouseDown(with event: NSEvent) {
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         let id = UUID()
-        let canvasInteraction = CanvasInteraction(id: id, location: location)
+        let canvasInteraction = CanvasInteraction(id: id, location: location, info: CanvasInteractionInfo(view: self, event: event, isAlternative: false))
+        canvas.interactions.insert(canvasInteraction)
+    }
+    
+    override func rightMouseDown(with event: NSEvent) {
+        guard let location: CGPoint = getMouseLocation(event: event) else { return }
+        let id = UUID()
+        let canvasInteraction = CanvasInteraction(id: id, location: location, info: CanvasInteractionInfo(view: self, event: event, isAlternative: true))
         canvas.interactions.insert(canvasInteraction)
     }
     
     override func mouseUp(with event: NSEvent) {
+        guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
+        canvasInteraction.active = false
+    }
+    
+    override func rightMouseUp(with event: NSEvent) {
         guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
