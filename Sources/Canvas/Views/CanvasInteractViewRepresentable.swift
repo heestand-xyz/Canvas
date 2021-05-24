@@ -124,7 +124,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                         }) {
                             dragPhysics = dragInteraction.drag.physics
                             let position: CGPoint = canvas.coordinate.absolute(location: interaction.location)
-                            canvas.delegate?.canvasDragReleased(dragInteraction.drag, at: position, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                            canvas.delegate?.canvasDragReleased(dragInteraction.drag, at: position, info: interaction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                         }
                         guard canvas.physics && dragPhysics != false else {
                             remove()
@@ -167,7 +167,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 let dragInteraction = CanvasDragInteraction(drag: drag, interaction: interaction)
                 canvas.dragInteractions.insert(dragInteraction)
                 let position: CGPoint = canvas.coordinate.absolute(location: interaction.location)
-                canvas.delegate?.canvasDragStarted(drag, at: position, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                canvas.delegate?.canvasDragStarted(drag, at: position, info: interaction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
             }
               
             /// Pinch

@@ -8,8 +8,8 @@ public protocol CanvasDelegate: AnyObject {
     func canvasDragGetPosition(_ drag: CanvasDrag, coordinate: CanvasCoordinate) -> CGPoint
     func canvasDragSetPosition(_ drag: CanvasDrag, to position: CGPoint, coordinate: CanvasCoordinate)
 
-    func canvasDragStarted(_ drag: CanvasDrag, at position: CGPoint, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
-    func canvasDragReleased(_ drag: CanvasDrag, at position: CGPoint, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
+    func canvasDragStarted(_ drag: CanvasDrag, at position: CGPoint, info: CanvasInteractionInfo, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
+    func canvasDragReleased(_ drag: CanvasDrag, at position: CGPoint, info: CanvasInteractionInfo, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
     func canvasDragWillEnd(_ drag: CanvasDrag, at position: CGPoint, coordinate: CanvasCoordinate)
     func canvasDragDidEnd(_ drag: CanvasDrag, at position: CGPoint, coordinate: CanvasCoordinate)
     

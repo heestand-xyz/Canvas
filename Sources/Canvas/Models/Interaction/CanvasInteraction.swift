@@ -12,6 +12,8 @@ public struct CanvasInteractionInfo {
     public let event: NSEvent
     /// Right mouse click.
     public let isAlternative: Bool
+    #else
+    public let isAlternative: Bool = false
     #endif
 }
 
