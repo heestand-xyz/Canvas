@@ -13,8 +13,9 @@ public protocol CanvasDelegate: AnyObject {
     func canvasDragWillEnd(_ drag: CanvasDrag, at position: CGPoint, coordinate: CanvasCoordinate)
     func canvasDragDidEnd(_ drag: CanvasDrag, at position: CGPoint, coordinate: CanvasCoordinate)
     
-    func canvasMoveStarted(at position: CGPoint, viaScroll: Bool, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
-    func canvasMoveEnded(at position: CGPoint, viaScroll: Bool, coordinate: CanvasCoordinate)
+    func canvasMoveStarted(at position: CGPoint, viaScroll: Bool, info: CanvasInteractionInfo?, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
+    func canvasMoveUpdated(at position: CGPoint, viaScroll: Bool, info: CanvasInteractionInfo?, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
+    func canvasMoveEnded(at position: CGPoint, viaScroll: Bool, info: CanvasInteractionInfo?, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)
     
     #if os(macOS)
     func canvasSelectionStarted(at position: CGPoint, info: CanvasInteractionInfo, keyboardFlags: Set<CanvasKeyboardFlag>, coordinate: CanvasCoordinate)

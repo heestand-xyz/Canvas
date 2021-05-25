@@ -182,7 +182,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     let interactionPosition1: CGPoint = canvas.coordinate.absolute(location: pinchInteraction.0.location)
                     let interactionPosition: CGPoint = (interactionPosition0 + interactionPosition1) / 2
                     #if os(iOS)
-                    canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
+                    canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, info: pinchInteraction.0.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #endif
                     canvas.pinchInteraction = nil
                 }
@@ -203,7 +203,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 let interactionPosition: CGPoint = canvas.coordinate.absolute(location: panInteraction.location)
                 if !isInteracting {
                     #if os(iOS)
-                    canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
+                    canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #elseif os(macOS)
                     canvas.delegate?.canvasSelectionEnded(at: interactionPosition, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #endif
@@ -211,7 +211,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 } else if !panInteraction.active {
                     if filteredPotentialPanInteractions.count == 1 {
                         #if os(iOS)
-                        canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, coordinate: canvas.coordinate)
+                        canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                         #elseif os(macOS)
                         canvas.delegate?.canvasSelectionEnded(at: interactionPosition, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                         #endif
@@ -224,7 +224,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     canvas.panInteraction = filteredPotentialPanInteractions[0]
                     let interactionPosition: CGPoint = canvas.coordinate.absolute(location: canvas.panInteraction!.location)
                     #if os(iOS)
-                    canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #elseif os(macOS)
                     canvas.delegate?.canvasSelectionStarted(at: interactionPosition, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #endif
@@ -274,7 +274,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         func didStartScroll() {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
-            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
             print("...mouseLocation:", mouseLocation)
         }
         
@@ -289,6 +289,8 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             } else {
                 offsetCanvas(by: velocity)
             }
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
+            canvas.delegate?.canvasMoveUpdated(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
         
         func didEndScroll() {
@@ -297,7 +299,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 snapToAngle(at: mouseLocation)
             }
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
-            canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: true, coordinate: canvas.coordinate)
+            canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
         
         // MARK: - Magnify
@@ -305,19 +307,21 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         func didStartMagnify() {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
-            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
         
         func didMagnify(_ velocity: CGFloat) {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let relativeScale: CGFloat = 1.0 + velocity * magnifyMuliplier
             scaleCanvas(by: relativeScale, at: mouseLocation)
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
+            canvas.delegate?.canvasMoveUpdated(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
         
         func didEndMagnify() {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
-            canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: true, coordinate: canvas.coordinate)
+            canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
         
         // MARK: - Rotate
@@ -325,20 +329,22 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         func didStartRotate() {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
-            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+            canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
         
         func didRotate(_ velocity: CGFloat) {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let relativeAngle: Angle = Angle(radians: Double(velocity * rotateMultipier * -1))
             rotateCanvas(by: relativeAngle, at: mouseLocation)
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
+            canvas.delegate?.canvasMoveUpdated(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
         
         func didEndRotate() {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             snapToAngle(at: mouseLocation)
             let interactionPosition: CGPoint = canvas.coordinate.absolute(location: mouseLocation)
-            canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: true, coordinate: canvas.coordinate)
+            canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
         
         // MARK: - Drag
@@ -472,6 +478,8 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             guard let panInteraction: CanvasInteraction = canvas.panInteraction else { return }
             
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: panInteraction.location)
+
             #if os(iOS)
             
             move(panInteraction)
@@ -479,10 +487,11 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             
             #elseif os(macOS)
             
-            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: panInteraction.location)
             canvas.delegate?.canvasSelectionChanged(to: interactionPosition, coordinate: canvas.coordinate)
             
             #endif
+            
+            canvas.delegate?.canvasMoveUpdated(at: interactionPosition, viaScroll: false, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
             
         }
         
@@ -513,6 +522,9 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             }
             
             transformed()
+            
+            let interactionPosition: CGPoint = canvas.coordinate.absolute(location: (pinchInteraction.0.location + pinchInteraction.1.location) / 2)
+            canvas.delegate?.canvasMoveUpdated(at: interactionPosition, viaScroll: false, info: pinchInteraction.0.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
             
         }
         

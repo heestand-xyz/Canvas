@@ -2,7 +2,7 @@ import SwiftUI
 import MultiViews
 import CoreGraphicsExtensions
 
-class CanvasInteractView: MPView {
+public class CanvasInteractView: MPView {
     
     var canvas: Canvas
     var didMoveCanvasInteractions: (Set<CanvasInteraction>) -> ()
@@ -75,11 +75,17 @@ class CanvasInteractView: MPView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    public override var canBecomeFirstResponder: Bool { true }
+    
+    public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        action.description.contains("context")
+    }
+    
     #if os(iOS)
     
     // MARK: - Touch
     
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             let id = UUID()
             let location: CGPoint = touch.location(in: self)
@@ -89,7 +95,7 @@ class CanvasInteractView: MPView {
         }
     }
     
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+    public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         var movedCanvasInteractions: Set<CanvasInteraction> = []
         for touch in touches {
             guard let canvasInteraction: CanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
@@ -106,7 +112,7 @@ class CanvasInteractView: MPView {
         didMoveCanvasInteractions(movedCanvasInteractions)
     }
     
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             guard let canvasInteraction: CanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
                 canvasInteraction.touch == touch
@@ -115,7 +121,7 @@ class CanvasInteractView: MPView {
         }
     }
     
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+    public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             guard let canvasInteraction: CanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
                 canvasInteraction.touch == touch
@@ -259,3 +265,55 @@ class CanvasInteractView: MPView {
     #endif
     
 }
+
+public protocol NodeContextActions {
+    func contextCopy()
+    func contextDuplicate()
+    func contextRemove()
+    func contextFillView()
+    func contextFullscreen()
+}
+
+extension CanvasInteractView: NodeContextActions {
+    
+    public static var nodeContextActions: NodeContextActions?
+    
+    @objc public func contextCopy() {
+        CanvasInteractView.nodeContextActions?.contextCopy()
+    }
+    
+    @objc public func contextDuplicate() {
+        CanvasInteractView.nodeContextActions?.contextDuplicate()
+    }
+    
+    @objc public func contextRemove() {
+        CanvasInteractView.nodeContextActions?.contextRemove()
+    }
+    
+    @objc public func contextFillView() {
+        CanvasInteractView.nodeContextActions?.contextFillView()
+    }
+    
+    @objc public func contextFullscreen() {
+        CanvasInteractView.nodeContextActions?.contextFullscreen()
+    }
+}
+
+public protocol AreaContextActions {
+    func contextPaseNodes()
+    func contextFitCanvas()
+}
+
+extension CanvasInteractView: AreaContextActions {
+    
+    public static var areaContextActions: AreaContextActions?
+    
+    @objc public func contextPaseNodes() {
+        CanvasInteractView.areaContextActions?.contextPaseNodes()
+    }
+    
+    @objc public func contextFitCanvas() {
+        CanvasInteractView.areaContextActions?.contextFitCanvas()
+    }
+}
+
