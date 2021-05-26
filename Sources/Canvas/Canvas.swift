@@ -33,8 +33,9 @@ public class Canvas: ObservableObject, Codable, Identifiable {
     /// Only used for centering.
     @Published public var size: CGSize = .zero
 
-    public var center: CGPoint { offset + size / 2 }
-    
+    public var centerLocation: CGPoint { size.point / 2 }
+    public var centerPosition: CGPoint { coordinate.absolute(location: centerLocation) }
+
     @Published var interactions: Set<CanvasInteraction> = []
     @Published var panInteraction: CanvasInteraction? = nil
     @Published var pinchInteraction: (CanvasInteraction, CanvasInteraction)? = nil

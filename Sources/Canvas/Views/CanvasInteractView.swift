@@ -75,11 +75,17 @@ public class CanvasInteractView: MPView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    #if os(iOS)
     public override var canBecomeFirstResponder: Bool { true }
-    
     public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         action.description.contains("context")
     }
+    #elseif os(macOS)
+    public var canBecomeFirstResponder: Bool { true }
+    public func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        action.description.contains("context")
+    }
+    #endif
     
     #if os(iOS)
     
@@ -134,31 +140,31 @@ public class CanvasInteractView: MPView {
     
     // MARK: - Mouse
     
-    override func mouseDown(with event: NSEvent) {
+    public override func mouseDown(with event: NSEvent) {
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         let id = UUID()
         let canvasInteraction = CanvasInteraction(id: id, location: location, info: CanvasInteractionInfo(view: self, event: event, isAlternative: false))
         canvas.interactions.insert(canvasInteraction)
     }
     
-    override func rightMouseDown(with event: NSEvent) {
+    public override func rightMouseDown(with event: NSEvent) {
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         let id = UUID()
         let canvasInteraction = CanvasInteraction(id: id, location: location, info: CanvasInteractionInfo(view: self, event: event, isAlternative: true))
         canvas.interactions.insert(canvasInteraction)
     }
     
-    override func mouseUp(with event: NSEvent) {
+    public override func mouseUp(with event: NSEvent) {
         guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
     
-    override func rightMouseUp(with event: NSEvent) {
+    public override func rightMouseUp(with event: NSEvent) {
         guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
     
-    override func mouseDragged(with event: NSEvent) {
+    public override func mouseDragged(with event: NSEvent) {
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
         let lastLocation: CGPoint = canvasInteraction.location
@@ -169,7 +175,7 @@ public class CanvasInteractView: MPView {
         didMoveCanvasInteractions([canvasInteraction])
     }
     
-    override func mouseMoved(with event: NSEvent) {
+    public override func mouseMoved(with event: NSEvent) {
         canvas.mouseLocation = getMouseLocation(event: event)
     }
     
@@ -192,7 +198,7 @@ public class CanvasInteractView: MPView {
     
     // MARK: - Scroll
     
-    override func scrollWheel(with event: NSEvent) {
+    public override func scrollWheel(with event: NSEvent) {
         
         let delta: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
         
@@ -213,11 +219,11 @@ public class CanvasInteractView: MPView {
     
     // MARK: - MAgnify
     
-    override func magnify(with event: NSEvent) {
+    public override func magnify(with event: NSEvent) {
         switch event.phase {
         case .began:
             didStartMagnify()
-        case .changed:
+            case .changed:
             let delta: CGFloat = event.deltaZ
             didMagnify(delta)
         case .ended, .cancelled:
@@ -229,7 +235,7 @@ public class CanvasInteractView: MPView {
     
     // MARK: - Rotate
     
-    override func rotate(with event: NSEvent) {
+    public override func rotate(with event: NSEvent) {
         switch event.phase {
         case .began:
             didStartRotate()
@@ -245,7 +251,7 @@ public class CanvasInteractView: MPView {
     
     // MARK: - Flags
     
-    override func flagsChanged(with event: NSEvent) {
+    public override func flagsChanged(with event: NSEvent) {
         var keyboardFlags: Set<CanvasKeyboardFlag> = []
         switch event.modifierFlags.intersection(.deviceIndependentFlagsMask) {
         case .command:
