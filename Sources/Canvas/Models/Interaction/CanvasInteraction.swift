@@ -57,6 +57,8 @@ class CanvasInteraction: Identifiable {
     var timeout: Bool = false
     private var timeoutTimer: Timer?
     
+    var velocityDampening: CGFloat?
+    
     init(id: UUID,
          location: CGPoint,
          info: CanvasInteractionInfo) {

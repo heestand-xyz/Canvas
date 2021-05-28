@@ -164,6 +164,27 @@ public extension Canvas {
     }
 }
 
+// MARK: - Zoom
+
+public extension Canvas {
+    
+    func zoom(by relativeScale: CGFloat, at location: CGPoint? = nil, animated: Bool = false) {
+        let scale = scale * relativeScale
+        let offset = offset + scaleOffset(relativeScale: relativeScale, at: location ?? centerLocation)
+        let coordinate = CanvasCoordinate(offset: offset, scale: scale, angle: angle)
+        move(to: coordinate, animatedDuration: animated ? 0.25 : nil)
+    }
+    
+    func scaleOffset(relativeScale: CGFloat, at location: CGPoint) -> CGPoint {
+        
+        let locationOffset: CGPoint = location - offset
+        let scaledAverageLocationOffset: CGPoint = locationOffset * relativeScale
+        let relativeScaleOffset: CGPoint = locationOffset - scaledAverageLocationOffset
+        
+        return relativeScaleOffset
+        
+    }
+}
 
 // MARK: - Origin
 

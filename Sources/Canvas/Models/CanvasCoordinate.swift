@@ -28,10 +28,16 @@ public extension CanvasCoordinate {
 }
 
 public extension CanvasCoordinate {
-    /// Converts from screen space to content space
+    
+    @available(*, deprecated, renamed: "position(at:)")
     func absolute(location: CGPoint) -> CGPoint {
+        position(at: location)
+    }
+    /// Converts from screen space to content space
+    func position(at location: CGPoint) -> CGPoint {
         CanvasCoordinate.rotate((location - offset) / scale, by: -angle)
     }
+    
     /// Converts from screen space to content space
     func absolute(frame: CGRect) -> (topLeft: CGPoint, bottomLeft: CGPoint, topRight: CGPoint, bottomRight: CGPoint) {
         (
@@ -41,10 +47,16 @@ public extension CanvasCoordinate {
             bottomRight: absolute(location: CGPoint(x: frame.maxX, y: frame.maxY))
         )
     }
-    /// Converts from content space to screen space
+    
+    @available(*, deprecated, renamed: "location(at:)")
     func relative(position: CGPoint) -> CGPoint {
+        location(at: position)
+    }
+    /// Converts from content space to screen space
+    func location(at position: CGPoint) -> CGPoint {
         CanvasCoordinate.rotate(position, by: angle) * scale + offset
     }
+    
     func scaleRotate(_ vector: CGVector) -> CGVector {
         (CanvasCoordinate.rotate(vector.point, by: -angle) / scale).vector
     }

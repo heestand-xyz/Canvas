@@ -26,28 +26,29 @@ public struct CanvasPolyGrid: View {
         size * canvasCoordinate.scale
     }
     
-    let extraScale: CGFloat = 2.0
-    
     let fractions: [CGFloat] = [0.25, 1.0, 4.0, 16.0]
     
     public var body: some View {
-        ZStack {
-            ForEach(fractions, id: \.self) { fraction in
-                if canvasCoordinate.scale > (0.25 / fraction) {
-                    grid(at: fraction)
-                        .opacity(Double((canvasCoordinate.scale - (0.25 / fraction)) * fraction))
+        GeometryReader { geometry in
+            let extraScale: CGFloat = max(2.0, 0.5 + geometry.size.height / geometry.size.width)
+            ZStack {
+                ForEach(fractions, id: \.self) { fraction in
+                    if canvasCoordinate.scale > (0.25 / fraction) {
+                        grid(at: fraction, extraScale: extraScale)
+                            .opacity(Double((canvasCoordinate.scale - (0.25 / fraction)) * fraction))
+                    }
                 }
             }
+            .canvasCoordinateRotationOffset(canvasCoordinate)
         }
-        .canvasCoordinateRotationOffset(canvasCoordinate)
         .drawingGroup()
     }
     
-    func grid(at superScale: CGFloat = 1.0, lineWidth: CGFloat = .onePixel) -> some View {
+    func grid(at superScale: CGFloat = 1.0, lineWidth: CGFloat = .onePixel, extraScale: CGFloat = 2.0) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .topLeading) {
                 ForEach(0..<count) { i in
-                    ForEach(-count(size: geo.size, at: superScale)...count(size: geo.size, at: superScale), id: \.self) { y in
+                    ForEach(-count(size: geo.size, at: superScale, extraScale: extraScale)...count(size: geo.size, at: superScale, extraScale: extraScale), id: \.self) { y in
                         Rectangle()
                             .frame(height: lineWidth)
                             .frame(width: geo.size.width * extraScale * 2.0)
@@ -84,7 +85,7 @@ public struct CanvasPolyGrid: View {
         CGFloat(index) / CGFloat(count)
     }
     
-    func count(size: CGSize, at superScale: CGFloat) -> Int {
+    func count(size: CGSize, at superScale: CGFloat, extraScale: CGFloat) -> Int {
         let scaledSize: CGSize = (size / (spacing * superScale)) * extraScale
         return max(Int(scaledSize.width), Int(scaledSize.height))
     }
