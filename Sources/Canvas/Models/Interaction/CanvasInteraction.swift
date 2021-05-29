@@ -59,6 +59,8 @@ class CanvasInteraction: Identifiable {
     
     var velocityDampening: CGFloat?
     
+//    var pickedUpByOther: Bool = false
+    
     init(id: UUID,
          location: CGPoint,
          info: CanvasInteractionInfo) {

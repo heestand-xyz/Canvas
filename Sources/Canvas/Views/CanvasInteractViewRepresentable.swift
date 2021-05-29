@@ -141,6 +141,11 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                         continue
                     }
                     
+//                    guard !interaction.pickedUpByOther else {
+//                        remove()
+//                        continue
+//                    }
+                    
                     #if os(iOS)
                     
                     interaction.location += interaction.velocity
@@ -168,6 +173,9 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 let interactionPosition: CGPoint = canvas.coordinate.position(at: interaction.location)
                 guard let drag: CanvasDrag = canvas.delegate?.canvasDragHitTest(at: interactionPosition, coordinate: canvas.coordinate) else { continue }
                 guard !canvas.dragInteractions.filter({ $0.interaction.active }).contains(where: { $0.drag.id == drag.id }) else { continue }
+//                if let oldDragInteraction: CanvasDragInteraction = canvas.dragInteractions.filter({ $0.interaction.auto }).first(where: { $0.drag.id == drag.id }) {
+//                    oldDragInteraction.interaction.pickedUpByOther = true
+//                }
                 let dragInteraction = CanvasDragInteraction(drag: drag, interaction: interaction)
                 canvas.dragInteractions.insert(dragInteraction)
                 let position: CGPoint = canvas.coordinate.position(at: interaction.location)
@@ -436,15 +444,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         func predictInteractionLocation(interaction: CanvasInteraction) -> CGPoint {
             var location: CGPoint = interaction.location
             var velocity: CGVector = interaction.velocity
-            var velocityDampening: CGFloat = CanvasDrag.Physics.Force.standard.velocityDampening
-            if let dragInteraction: CanvasDragInteraction = canvas.dragInteractions.first(where: { dragInteraction in
-                dragInteraction.interaction == interaction
-            }) {
-                let dragPhysics: CanvasDrag.Physics = dragInteraction.drag.physics
-                if case .active(let force) = dragPhysics {
-                    velocityDampening = force.velocityDampening
-                }
-            }
+            let velocityDampening: CGFloat = interaction.velocityDampening ?? CanvasDrag.Physics.Force.standard.velocityDampening
             while sqrt(pow(velocity.dx, 2.0) + pow(velocity.dy, 2.0)) > velocityRadiusThreshold {
                 location += velocity
                 velocity *= velocityDampening
