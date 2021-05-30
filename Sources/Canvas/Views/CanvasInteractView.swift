@@ -192,8 +192,8 @@ public class CanvasInteractView: MPView {
         if point.y == 0.0 { point = convert(CGPoint(x: 0.0, y: windowView.bounds.height), to: windowView) }
         let origin: CGPoint = CGPoint(x: point.x, y: windowView.bounds.size.height - point.y)
         let location: CGPoint = mouseLocation - origin
-        let flippedLocation: CGPoint = CGPoint(x: location.x, y: bounds.size.height - location.y)
-        return flippedLocation
+        let finalLocation: CGPoint = CGPoint(x: location.x, y: bounds.size.height - location.y)
+        return finalLocation
     }
     
     // MARK: - Scroll
