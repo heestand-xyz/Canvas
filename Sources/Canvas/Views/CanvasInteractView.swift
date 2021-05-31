@@ -185,7 +185,8 @@ public class CanvasInteractView: MPView {
 //                  window == nil ? "(View Window Missing)" : "",
 //                  canvas.window == nil ? "(Canvas Window Missing)" : "")
 //        }
-        guard let window: NSWindow = canvas.window ?? window else { return nil }
+        guard let window: NSWindow = /*canvas.window ?? */window else { return nil }
+        let title: String = window.title
         let mouseLocation: CGPoint = window.mouseLocationOutsideOfEventStream
         guard let windowView: NSView = window.contentView else { return nil }
         var point: CGPoint = convert(.zero, to: windowView)
