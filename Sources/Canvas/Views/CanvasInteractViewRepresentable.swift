@@ -2,6 +2,7 @@ import SwiftUI
 import MultiViews
 import CoreGraphics
 import CoreGraphicsExtensions
+import DisplayLink
 
 struct CanvasInteractViewRepresentable: ViewRepresentable {
 
@@ -63,26 +64,18 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
 
         @ObservedObject var canvas: Canvas
 
-        #if os(iOS)
-        var displayLink: CADisplayLink!
-        #endif
+        let displayLink: DisplayLink
         
         init(canvas: Canvas) {
             
             self.canvas = canvas
             
-            #if os(iOS)
-            displayLink = CADisplayLink(target: self, selector: #selector(frameLoop))
-            displayLink.add(to: .current, forMode: .common)
-            #elseif os(macOS)
-            RunLoop.current.add(Timer(timeInterval: 1.0 / 60.0, repeats: true, block: { _ in
-                self.frameLoop()
-            }), forMode: .common)
-            #endif
+            displayLink = DisplayLink()
             
+            displayLink.listen(frameLoop: frameLoop)
         }
         
-        @objc func frameLoop() {
+        func frameLoop() {
             
             for interaction in canvas.interactions {
                 
@@ -97,8 +90,9 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     }) {
                         let position: CGPoint = canvas.coordinate.position(at: interaction.location)
                         canvas.delegate?.canvasDragWillEnd(dragInteraction.drag, at: position, coordinate: canvas.coordinate)
-                        snapToGrid(dragInteraction) {
-                            self.canvas.delegate?.canvasDragDidEnd(dragInteraction.drag, at: position, coordinate: self.canvas.coordinate)
+                        snapToGrid(dragInteraction) { [weak self] in
+                            guard let coordinate: CanvasCoordinate = self?.canvas.coordinate else { return }
+                            self?.canvas.delegate?.canvasDragDidEnd(dragInteraction.drag, at: position, coordinate: coordinate)
                         }
                     }
                 }
@@ -474,10 +468,11 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
             guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag, coordinate: canvas.coordinate) else { return }
             let snapPosition: CGPoint = Canvas.snapToGrid(position: position, snapGrid: snapGrid)
             
-            CanvasAnimation.animate(for: 0.25, ease: .easeOut) { fraction in
+            CanvasAnimation.animate(for: 0.25, ease: .easeOut) { [weak self] fraction in
                 
+                guard let coordinate: CanvasCoordinate = self?.canvas.coordinate else { return }
                 let animatedPosition: CGPoint = position * (1.0 - fraction) + snapPosition * fraction
-                self.canvas.delegate?.canvasDragSetPosition(dragInteraction.drag, to: animatedPosition, coordinate: self.canvas.coordinate)
+                self?.canvas.delegate?.canvasDragSetPosition(dragInteraction.drag, to: animatedPosition, coordinate: coordinate)
                 
             } done: {
                 done()
@@ -524,8 +519,8 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                 pinchInteraction.0.initialRotation = initialRotation
                 if abs(initialRotation.degrees) > initialRotationThreshold.degrees {
                     pinchInteraction.0.initialRotationThresholdReached = true
-                    CanvasAnimation.animate(for: 0.25, ease: .easeInOut) { fraction, relativeFraction in
-                        self.rotate(relativeAngle: Angle(degrees: initialRotation.degrees * Double(relativeFraction)), pinchInteraction)
+                    CanvasAnimation.animate(for: 0.25, ease: .easeInOut) { [weak self] fraction, relativeFraction in
+                        self?.rotate(relativeAngle: Angle(degrees: initialRotation.degrees * Double(relativeFraction)), pinchInteraction)
                     }
                     return true
                 }
@@ -580,9 +575,9 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
                     let relativeAngle: Angle = angle - narrowCanvasAngle
                     let newAngle: Angle = currentAngle + relativeAngle
                     let offset: CGPoint = currentOffset + rotationOffset(relativeAngle: relativeAngle, at: location)
-                    CanvasAnimation.animate(for: 0.25, ease: .easeOut) { fraction in
-                        self.canvas.offset = currentOffset * (1.0 - fraction) + offset * fraction
-                        self.canvas.angle = currentAngle * Double(1.0 - fraction) + newAngle * Double(fraction)
+                    CanvasAnimation.animate(for: 0.25, ease: .easeOut) { [weak self] fraction in
+                        self?.canvas.offset = currentOffset * (1.0 - fraction) + offset * fraction
+                        self?.canvas.angle = currentAngle * Double(1.0 - fraction) + newAngle * Double(fraction)
                     } done: {}
                     break
                 }
