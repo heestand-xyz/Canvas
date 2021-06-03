@@ -59,8 +59,6 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         let snapAngleThreshold: Angle = Angle(degrees: 5)
         let isOnGridRadiusThreshold: CGFloat = 0.2
         let initialRotationThreshold: Angle = Angle(degrees: 10)
-        let magnifyMuliplier: CGFloat = 0.0025
-        let rotateMultipier: CGFloat = 0.025
 
         @ObservedObject var canvas: Canvas
 
@@ -318,7 +316,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         
         func didMagnify(_ velocity: CGFloat) {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
-            let relativeScale: CGFloat = 1.0 + velocity * magnifyMuliplier
+            let relativeScale: CGFloat = 1.0 + velocity
             scaleCanvas(by: relativeScale, at: mouseLocation)
             let interactionPosition: CGPoint = canvas.coordinate.position(at: mouseLocation)
             canvas.delegate?.canvasMoveUpdated(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
@@ -340,7 +338,7 @@ struct CanvasInteractViewRepresentable: ViewRepresentable {
         
         func didRotate(_ velocity: CGFloat) {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
-            let relativeAngle: Angle = Angle(radians: Double(velocity * rotateMultipier * -1))
+            let relativeAngle: Angle = Angle(degrees: Double(velocity * -1))
             rotateCanvas(by: relativeAngle, at: mouseLocation)
             let interactionPosition: CGPoint = canvas.coordinate.position(at: mouseLocation)
             canvas.delegate?.canvasMoveUpdated(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)

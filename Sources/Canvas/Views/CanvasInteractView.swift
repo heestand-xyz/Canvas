@@ -225,7 +225,7 @@ public class CanvasInteractView: MPView {
         case .began:
             didStartMagnify()
             case .changed:
-            let delta: CGFloat = event.deltaZ
+            let delta: CGFloat = event.magnification
             didMagnify(delta)
         case .ended, .cancelled:
             didEndMagnify()
@@ -241,7 +241,7 @@ public class CanvasInteractView: MPView {
         case .began:
             didStartRotate()
         case .changed:
-            let delta: CGFloat = event.deltaZ
+            let delta: CGFloat = CGFloat(event.rotation)
             didRotate(delta)
         case .ended, .cancelled:
             didEndRotate()
