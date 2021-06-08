@@ -1,10 +1,10 @@
 import SwiftUI
 
-public struct CanvasView: View {
+public struct CCanvasView: View {
     
-    @ObservedObject var canvas: Canvas
+    @ObservedObject var canvas: CCanvas
     
-    public init(canvas: Canvas) {
+    public init(canvas: CCanvas) {
         self.canvas = canvas
     }
     
@@ -35,7 +35,7 @@ public struct CanvasView: View {
 //            #endif
             
             // Interact
-            CanvasInteractViewRepresentable(canvas: canvas)
+            CCanvasInteractViewRepresentable(canvas: canvas)
             
         }
         

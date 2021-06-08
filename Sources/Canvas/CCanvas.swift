@@ -3,9 +3,9 @@ import SwiftUI
 import CoreGraphicsExtensions
 import MultiViews
 
-public class Canvas: ObservableObject, Codable, Identifiable {
+public class CCanvas: ObservableObject, Codable, Identifiable {
     
-    public weak var delegate: CanvasDelegate?
+    public weak var delegate: CCanvasDelegate?
     
     public let id: UUID
     
@@ -19,9 +19,9 @@ public class Canvas: ObservableObject, Codable, Identifiable {
     @Published public var offset: CGPoint = .zero
     @Published public var scale: CGFloat = 1.0
     @Published public var angle: Angle = .zero
-    public var coordinate: CanvasCoordinate {
+    public var coordinate: CCanvasCoordinate {
         get {
-            CanvasCoordinate(offset: offset, scale: scale, angle: angle)
+            CCanvasCoordinate(offset: offset, scale: scale, angle: angle)
         }
         set {
             offset = newValue.offset
@@ -36,12 +36,12 @@ public class Canvas: ObservableObject, Codable, Identifiable {
     public var centerLocation: CGPoint { size.point / 2 }
     public var centerPosition: CGPoint { coordinate.absolute(location: centerLocation) }
 
-    @Published var interactions: Set<CanvasInteraction> = []
-    @Published var panInteraction: CanvasInteraction? = nil
-    @Published var pinchInteraction: (CanvasInteraction, CanvasInteraction)? = nil
-    @Published var dragInteractions: Set<CanvasDragInteraction> = []
+    @Published var interactions: Set<CCanvasInteraction> = []
+    @Published var panInteraction: CCanvasInteraction? = nil
+    @Published var pinchInteraction: (CCanvasInteraction, CCanvasInteraction)? = nil
+    @Published var dragInteractions: Set<CCanvasDragInteraction> = []
     
-    @Published public var keyboardFlags: Set<CanvasKeyboardFlag> = []
+    @Published public var keyboardFlags: Set<CCanvasKeyboardFlag> = []
     @Published public var mouseLocation: CGPoint? = nil
 
     public init(physics: Bool = iOS, snapGridToAngle: Angle? = nil) {
@@ -92,14 +92,14 @@ public class Canvas: ObservableObject, Codable, Identifiable {
     }
 }
 
-extension Canvas: Equatable {
+extension CCanvas: Equatable {
     
-    public static func == (lhs: Canvas, rhs: Canvas) -> Bool {
+    public static func == (lhs: CCanvas, rhs: CCanvas) -> Bool {
         lhs.id == rhs.id
     }
 }
 
-extension Canvas: Hashable {
+extension CCanvas: Hashable {
         
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
@@ -114,9 +114,9 @@ extension Canvas: Hashable {
 
 // MARK: - Snap to Grid
 
-extension Canvas {
+extension CCanvas {
     
-    public static func snapToGrid(position: CGPoint, snapGrid: CanvasSnapGrid) -> CGPoint {
+    public static func snapToGrid(position: CGPoint, snapGrid: CCanvasSnapGrid) -> CGPoint {
         
         let snapPosition: CGPoint
         switch snapGrid {
@@ -130,7 +130,7 @@ extension Canvas {
                                         y: round(position.y / (height * 2)) * (height * 2))
             let snapPositionB = CGPoint(x: round((position.x - width / 2) / width) * width + (width / 2),
                                         y: round((position.y - height) / (height * 2)) * (height * 2) + height)
-            if CanvasCoordinate.distance(from: snapPositionA, to: position) < CanvasCoordinate.distance(from: snapPositionB, to: position) {
+            if CCanvasCoordinate.distance(from: snapPositionA, to: position) < CCanvasCoordinate.distance(from: snapPositionB, to: position) {
                 snapPosition = snapPositionA
             } else {
                 snapPosition = snapPositionB
@@ -144,14 +144,14 @@ extension Canvas {
 
 // MARK: - Move
 
-public extension Canvas {
+public extension CCanvas {
     
-    func move(to coordinate: CanvasCoordinate, animatedDuration: CGFloat? = nil) {
+    func move(to coordinate: CCanvasCoordinate, animatedDuration: CGFloat? = nil) {
         let currentOffset: CGPoint = self.offset
         let currentScale: CGFloat = self.scale
         let currentAngle: Angle = self.angle
         if let duration: CGFloat = animatedDuration {
-            CanvasAnimation.animate(for: duration, ease: .easeInOut) { fraction in
+            CCanvasAnimation.animate(for: duration, ease: .easeInOut) { fraction in
                 self.offset = currentOffset * (1.0 - fraction) + coordinate.offset * fraction
                 self.scale = currentScale * (1.0 - fraction) + coordinate.scale * fraction
                 self.angle = Angle(degrees: currentAngle.degrees * Double(1.0 - fraction) + coordinate.angle.degrees * Double(fraction))
@@ -166,12 +166,12 @@ public extension Canvas {
 
 // MARK: - Zoom
 
-public extension Canvas {
+public extension CCanvas {
     
     func zoom(by relativeScale: CGFloat, at location: CGPoint? = nil, animated: Bool = false) {
         let scale = scale * relativeScale
         let offset = offset + scaleOffset(relativeScale: relativeScale, at: location ?? centerLocation)
-        let coordinate = CanvasCoordinate(offset: offset, scale: scale, angle: angle)
+        let coordinate = CCanvasCoordinate(offset: offset, scale: scale, angle: angle)
         move(to: coordinate, animatedDuration: animated ? 0.25 : nil)
     }
     
@@ -188,10 +188,10 @@ public extension Canvas {
 
 // MARK: - Origin
 
-public extension Canvas {
+public extension CCanvas {
     
-    var originCoordinate: CanvasCoordinate {
-        CanvasCoordinate(offset: size.point / 2, scale: 1.0, angle: .zero)
+    var originCoordinate: CCanvasCoordinate {
+        CCanvasCoordinate(offset: size.point / 2, scale: 1.0, angle: .zero)
     }
     
     func resetToOrigin(animated: Bool = false) {
@@ -202,9 +202,9 @@ public extension Canvas {
 
 // MARK: - Fit
 
-public extension Canvas {
+public extension CCanvas {
     
-    func fitCoordinate(in frame: CGRect, padding: CGFloat) -> CanvasCoordinate {
+    func fitCoordinate(in frame: CGRect, padding: CGFloat) -> CCanvasCoordinate {
         
         guard size != .zero else { return .zero }
         
@@ -217,7 +217,7 @@ public extension Canvas {
                                     size.height / targetFrame.height)
         let fitOffset: CGPoint = size / 2 - targetFrame.center * fitScale
         let fitAngle: Angle = .zero
-        let fitCoordinate = CanvasCoordinate(offset: fitOffset,
+        let fitCoordinate = CCanvasCoordinate(offset: fitOffset,
                                              scale: fitScale,
                                              angle: fitAngle)
 

@@ -10,13 +10,13 @@ import CoreGraphicsExtensions
 
 public struct CanvasPolyGrid: View {
     
-    let canvasCoordinate: CanvasCoordinate
+    let canvasCoordinate: CCanvasCoordinate
     
     let size: CGFloat
     
     let count: Int
     
-    public init(size: CGFloat, count: Int = 3, canvasCoordinate: CanvasCoordinate) {
+    public init(size: CGFloat, count: Int = 3, canvasCoordinate: CCanvasCoordinate) {
         self.size = size
         self.count = count
         self.canvasCoordinate = canvasCoordinate

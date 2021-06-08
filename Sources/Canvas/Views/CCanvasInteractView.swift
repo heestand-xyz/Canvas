@@ -2,10 +2,10 @@ import SwiftUI
 import MultiViews
 import CoreGraphicsExtensions
 
-public class CanvasInteractView: MPView {
+public class CCanvasInteractView: MPView {
     
-    var canvas: Canvas
-    var didMoveCanvasInteractions: (Set<CanvasInteraction>) -> ()
+    var canvas: CCanvas
+    var didMoveCCanvasInteractions: (Set<CCanvasInteraction>) -> ()
     
     var didStartScroll: () -> ()
     var didScroll: (CGVector) -> ()
@@ -25,8 +25,8 @@ public class CanvasInteractView: MPView {
     let scrollThreshold: CGFloat = 1.5
     #endif
 
-    init(canvas: Canvas,
-         didMoveCanvasInteractions: @escaping (Set<CanvasInteraction>) -> (),
+    init(canvas: CCanvas,
+         didMoveCCanvasInteractions: @escaping (Set<CCanvasInteraction>) -> (),
          didStartScroll: @escaping () -> (),
          didScroll: @escaping (CGVector) -> (),
          didEndScroll: @escaping () -> (),
@@ -38,7 +38,7 @@ public class CanvasInteractView: MPView {
          didEndRotate: @escaping () -> ()) {
         
         self.canvas = canvas
-        self.didMoveCanvasInteractions = didMoveCanvasInteractions
+        self.didMoveCCanvasInteractions = didMoveCCanvasInteractions
         
         self.didStartScroll = didStartScroll
         self.didScroll = didScroll
@@ -95,16 +95,16 @@ public class CanvasInteractView: MPView {
         for touch in touches {
             let id = UUID()
             let location: CGPoint = touch.location(in: self)
-            let canvasInteraction = CanvasInteraction(id: id, location: location, info: CanvasInteractionInfo(view: self))
+            let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self))
             canvasInteraction.touch = touch
             canvas.interactions.insert(canvasInteraction)
         }
     }
     
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        var movedCanvasInteractions: Set<CanvasInteraction> = []
+        var movedCCanvasInteractions: Set<CCanvasInteraction> = []
         for touch in touches {
-            guard let canvasInteraction: CanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
+            guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
                 canvasInteraction.touch == touch
             }) else { continue }
             let lastLocation: CGPoint = canvasInteraction.location
@@ -113,14 +113,14 @@ public class CanvasInteractView: MPView {
             let velocity: CGVector = CGVector(dx: location.x - lastLocation.x,
                                               dy: location.y - lastLocation.y)
             canvasInteraction.velocity = velocity
-            movedCanvasInteractions.insert(canvasInteraction)
+            movedCCanvasInteractions.insert(canvasInteraction)
         }
-        didMoveCanvasInteractions(movedCanvasInteractions)
+        didMoveCCanvasInteractions(movedCCanvasInteractions)
     }
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
-            guard let canvasInteraction: CanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
+            guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
                 canvasInteraction.touch == touch
             }) else { continue }
             canvasInteraction.active = false
@@ -129,7 +129,7 @@ public class CanvasInteractView: MPView {
     
     public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
-            guard let canvasInteraction: CanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
+            guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
                 canvasInteraction.touch == touch
             }) else { continue }
             canvasInteraction.active = false
@@ -143,36 +143,36 @@ public class CanvasInteractView: MPView {
     public override func mouseDown(with event: NSEvent) {
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         let id = UUID()
-        let canvasInteraction = CanvasInteraction(id: id, location: location, info: CanvasInteractionInfo(view: self, event: event, isAlternative: false))
+        let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, isAlternative: false))
         canvas.interactions.insert(canvasInteraction)
     }
     
     public override func rightMouseDown(with event: NSEvent) {
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         let id = UUID()
-        let canvasInteraction = CanvasInteraction(id: id, location: location, info: CanvasInteractionInfo(view: self, event: event, isAlternative: true))
+        let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, isAlternative: true))
         canvas.interactions.insert(canvasInteraction)
     }
     
     public override func mouseUp(with event: NSEvent) {
-        guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
+        guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
     
     public override func rightMouseUp(with event: NSEvent) {
-        guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
+        guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
     
     public override func mouseDragged(with event: NSEvent) {
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
-        guard let canvasInteraction: CanvasInteraction = canvas.interactions.first else { return }
+        guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         let lastLocation: CGPoint = canvasInteraction.location
         canvasInteraction.location = location
         let velocity: CGVector = CGVector(dx: location.x - lastLocation.x,
                                           dy: location.y - lastLocation.y)
         canvasInteraction.velocity = velocity
-        didMoveCanvasInteractions([canvasInteraction])
+        didMoveCCanvasInteractions([canvasInteraction])
     }
     
     public override func mouseMoved(with event: NSEvent) {
@@ -180,12 +180,12 @@ public class CanvasInteractView: MPView {
     }
     
     func getMouseLocation(event: NSEvent) -> CGPoint? {
-//        if window == nil || canvas.window == nil {
-//            print("Some Mouse Window is Missing",
-//                  window == nil ? "(View Window Missing)" : "",
-//                  canvas.window == nil ? "(Canvas Window Missing)" : "")
-//        }
-        guard let window: NSWindow = /*canvas.window ?? */window else { return nil }
+        if window == nil || canvas.window == nil {
+            print("Some Mouse Window is Missing",
+                  window == nil ? "(View Window Missing)" : "",
+                  canvas.window == nil ? "(Canvas Window Missing)" : "")
+        }
+        guard let window: NSWindow = canvas.window ?? window else { return nil }
         let title: String = window.title
         let mouseLocation: CGPoint = window.mouseLocationOutsideOfEventStream
         guard let windowView: NSView = window.contentView else { return nil }
@@ -253,7 +253,7 @@ public class CanvasInteractView: MPView {
     // MARK: - Flags
     
     public override func flagsChanged(with event: NSEvent) {
-        var keyboardFlags: Set<CanvasKeyboardFlag> = []
+        var keyboardFlags: Set<CCanvasKeyboardFlag> = []
         switch event.modifierFlags.intersection(.deviceIndependentFlagsMask) {
         case .command:
             keyboardFlags.insert(.command)
@@ -281,28 +281,28 @@ public protocol NodeContextActions {
     func contextFullscreen()
 }
 
-extension CanvasInteractView: NodeContextActions {
+extension CCanvasInteractView: NodeContextActions {
     
     public static var nodeContextActions: NodeContextActions?
     
     @objc public func contextCopy() {
-        CanvasInteractView.nodeContextActions?.contextCopy()
+        CCanvasInteractView.nodeContextActions?.contextCopy()
     }
     
     @objc public func contextDuplicate() {
-        CanvasInteractView.nodeContextActions?.contextDuplicate()
+        CCanvasInteractView.nodeContextActions?.contextDuplicate()
     }
     
     @objc public func contextRemove() {
-        CanvasInteractView.nodeContextActions?.contextRemove()
+        CCanvasInteractView.nodeContextActions?.contextRemove()
     }
     
     @objc public func contextFillView() {
-        CanvasInteractView.nodeContextActions?.contextFillView()
+        CCanvasInteractView.nodeContextActions?.contextFillView()
     }
     
     @objc public func contextFullscreen() {
-        CanvasInteractView.nodeContextActions?.contextFullscreen()
+        CCanvasInteractView.nodeContextActions?.contextFullscreen()
     }
 }
 
@@ -311,16 +311,16 @@ public protocol AreaContextActions {
     func contextFitCanvas()
 }
 
-extension CanvasInteractView: AreaContextActions {
+extension CCanvasInteractView: AreaContextActions {
     
     public static var areaContextActions: AreaContextActions?
     
     @objc public func contextPaseNodes() {
-        CanvasInteractView.areaContextActions?.contextPaseNodes()
+        CCanvasInteractView.areaContextActions?.contextPaseNodes()
     }
     
     @objc public func contextFitCanvas() {
-        CanvasInteractView.areaContextActions?.contextFitCanvas()
+        CCanvasInteractView.areaContextActions?.contextFitCanvas()
     }
 }
 

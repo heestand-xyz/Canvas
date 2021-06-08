@@ -6,7 +6,7 @@ import UIKit
 import SwiftUI
 import MultiViews
 
-public struct CanvasInteractionInfo {
+public struct CCanvasInteractionInfo {
     public let view: MPView
     #if os(macOS)
     public let event: NSEvent
@@ -17,7 +17,7 @@ public struct CanvasInteractionInfo {
     #endif
 }
 
-class CanvasInteraction: Identifiable {
+class CCanvasInteraction: Identifiable {
     
     let id: UUID
     
@@ -51,7 +51,7 @@ class CanvasInteraction: Identifiable {
     var touch: UITouch?
     #endif
     
-    let info: CanvasInteractionInfo
+    let info: CCanvasInteractionInfo
     
     private static let timeoutDuration: Double = 10.0
     var timeout: Bool = false
@@ -63,7 +63,7 @@ class CanvasInteraction: Identifiable {
     
     init(id: UUID,
          location: CGPoint,
-         info: CanvasInteractionInfo) {
+         info: CCanvasInteractionInfo) {
         self.id = id
         self.location = location
         self.velocity = CGVector(dx: 0.0, dy: 0.0)
@@ -75,7 +75,7 @@ class CanvasInteraction: Identifiable {
     
     private func refreshTimeout() {
         timeoutTimer?.invalidate()
-        timeoutTimer = Timer(timeInterval: CanvasInteraction.timeoutDuration, repeats: false, block: { [weak self] _ in
+        timeoutTimer = Timer(timeInterval: CCanvasInteraction.timeoutDuration, repeats: false, block: { [weak self] _ in
             self?.timeout = true
             self?.timeoutTimer = nil
         })
@@ -84,13 +84,13 @@ class CanvasInteraction: Identifiable {
     
 }
 
-extension CanvasInteraction: Equatable {
-    static func == (lhs: CanvasInteraction, rhs: CanvasInteraction) -> Bool {
+extension CCanvasInteraction: Equatable {
+    static func == (lhs: CCanvasInteraction, rhs: CCanvasInteraction) -> Bool {
         lhs.id == rhs.id
     }
 }
 
-extension CanvasInteraction: Hashable {
+extension CCanvasInteraction: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }

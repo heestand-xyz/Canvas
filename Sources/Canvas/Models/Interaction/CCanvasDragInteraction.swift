@@ -1,7 +1,7 @@
 import Foundation
 import CoreGraphics
 
-public struct CanvasDrag: Hashable, Equatable {
+public struct CCanvasDrag: Hashable, Equatable {
     
     public let id: UUID
     
@@ -31,15 +31,15 @@ public struct CanvasDrag: Hashable, Equatable {
     }
     let physics: Physics
     
-    let snapGrid: CanvasSnapGrid?
+    let snapGrid: CCanvasSnapGrid?
     
-    public init(id: UUID, physics: Physics, snapGrid: CanvasSnapGrid?) {
+    public init(id: UUID, physics: Physics, snapGrid: CCanvasSnapGrid?) {
         self.id = id
         self.physics = physics
         self.snapGrid = snapGrid
     }
     
-    public static func == (lhs: CanvasDrag, rhs: CanvasDrag) -> Bool {
+    public static func == (lhs: CCanvasDrag, rhs: CCanvasDrag) -> Bool {
         lhs.id == rhs.id
     }
     
@@ -50,10 +50,10 @@ public struct CanvasDrag: Hashable, Equatable {
     }
 }
 
-class CanvasDragInteraction {
-    let drag: CanvasDrag
-    let interaction: CanvasInteraction
-    init(drag: CanvasDrag, interaction: CanvasInteraction) {
+class CCanvasDragInteraction {
+    let drag: CCanvasDrag
+    let interaction: CCanvasInteraction
+    init(drag: CCanvasDrag, interaction: CCanvasInteraction) {
         self.drag = drag
         self.interaction = interaction
         if case .active(let force) = drag.physics {
@@ -62,13 +62,13 @@ class CanvasDragInteraction {
     }
 }
 
-extension CanvasDragInteraction: Equatable {
-    static func == (lhs: CanvasDragInteraction, rhs: CanvasDragInteraction) -> Bool {
+extension CCanvasDragInteraction: Equatable {
+    static func == (lhs: CCanvasDragInteraction, rhs: CCanvasDragInteraction) -> Bool {
         lhs.drag.id == rhs.drag.id && lhs.interaction.id == rhs.interaction.id
     }
 }
 
-extension CanvasDragInteraction: Hashable {
+extension CCanvasDragInteraction: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(drag.id)
         hasher.combine(interaction.id)

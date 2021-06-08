@@ -1,6 +1,6 @@
 import CoreGraphics
 
-public enum CanvasSnapGrid: Hashable {
+public enum CCanvasSnapGrid: Hashable {
     case square(size: CGFloat)
     case triangle(size: CGFloat)
     var size: CGFloat {

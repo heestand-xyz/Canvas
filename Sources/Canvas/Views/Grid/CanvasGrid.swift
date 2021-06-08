@@ -10,11 +10,11 @@ import CoreGraphicsExtensions
 
 public struct CanvasGrid: View {
     
-    let canvasCoordinate: CanvasCoordinate
+    let canvasCoordinate: CCanvasCoordinate
     
     let size: CGFloat
     
-    public init(size: CGFloat, canvasCoordinate: CanvasCoordinate) {
+    public init(size: CGFloat, canvasCoordinate: CCanvasCoordinate) {
         self.size = size
         self.canvasCoordinate = canvasCoordinate
     }

@@ -2,7 +2,7 @@ import CoreGraphics
 import CoreGraphicsExtensions
 import SwiftUI
 
-public struct CanvasCoordinate {
+public struct CCanvasCoordinate {
     public var offset: CGPoint
     public var scale: CGFloat
     public var angle: Angle
@@ -13,21 +13,21 @@ public struct CanvasCoordinate {
     }
 }
 
-public extension CanvasCoordinate {
-    static func cross(from fromCoordinate: CanvasCoordinate, to toCoordinate: CanvasCoordinate, at fraction: CGFloat) -> CanvasCoordinate {
-        CanvasCoordinate(offset: fromCoordinate.offset * (1.0 - fraction) + toCoordinate.offset * fraction,
+public extension CCanvasCoordinate {
+    static func cross(from fromCoordinate: CCanvasCoordinate, to toCoordinate: CCanvasCoordinate, at fraction: CGFloat) -> CCanvasCoordinate {
+        CCanvasCoordinate(offset: fromCoordinate.offset * (1.0 - fraction) + toCoordinate.offset * fraction,
                          scale: fromCoordinate.scale * (1.0 - fraction) + toCoordinate.scale * fraction,
                          angle: Angle(degrees: fromCoordinate.angle.degrees * Double(1.0 - fraction) + toCoordinate.angle.degrees * Double(fraction)))
     }
 }
 
-public extension CanvasCoordinate {
+public extension CCanvasCoordinate {
     var rotatedOffset: CGPoint {
-        CanvasCoordinate.rotate(offset, by: -angle)
+        CCanvasCoordinate.rotate(offset, by: -angle)
     }
 }
 
-public extension CanvasCoordinate {
+public extension CCanvasCoordinate {
     
     @available(*, deprecated, renamed: "position(at:)")
     func absolute(location: CGPoint) -> CGPoint {
@@ -35,7 +35,7 @@ public extension CanvasCoordinate {
     }
     /// Converts from screen space to content space
     func position(at location: CGPoint) -> CGPoint {
-        CanvasCoordinate.rotate((location - offset) / scale, by: -angle)
+        CCanvasCoordinate.rotate((location - offset) / scale, by: -angle)
     }
     
     /// Converts from screen space to content space
@@ -54,15 +54,15 @@ public extension CanvasCoordinate {
     }
     /// Converts from content space to screen space
     func location(at position: CGPoint) -> CGPoint {
-        CanvasCoordinate.rotate(position, by: angle) * scale + offset
+        CCanvasCoordinate.rotate(position, by: angle) * scale + offset
     }
     
     func scaleRotate(_ vector: CGVector) -> CGVector {
-        (CanvasCoordinate.rotate(vector.point, by: -angle) / scale).vector
+        (CCanvasCoordinate.rotate(vector.point, by: -angle) / scale).vector
     }
 }
 
-public extension CanvasCoordinate {
+public extension CCanvasCoordinate {
     static func rotate(_ point: CGPoint, by rotation: Angle) -> CGPoint {
         var angle: Angle = Angle(radians: Double(atan2(point.y, point.x)))
         angle += rotation
@@ -82,12 +82,12 @@ public extension CanvasCoordinate {
     }
 }
 
-public extension CanvasCoordinate {
-    static let zero: CanvasCoordinate = CanvasCoordinate(offset: .zero, scale: 1.0, angle: .zero)
+public extension CCanvasCoordinate {
+    static let zero: CCanvasCoordinate = CCanvasCoordinate(offset: .zero, scale: 1.0, angle: .zero)
 }
 
 public extension View {
-    func canvasCoordinateRotationOffset(_ canvasCoordinate: CanvasCoordinate) -> some View {
+    func canvasCoordinateRotationOffset(_ canvasCoordinate: CCanvasCoordinate) -> some View {
         self.rotationEffect(canvasCoordinate.angle, anchor: .topLeading)
             .offset(x: canvasCoordinate.offset.x,
                     y: canvasCoordinate.offset.y)
