@@ -8,7 +8,7 @@
 import SwiftUI
 import CoreGraphicsExtensions
 
-@available(macOS 12.0, *)
+@available(macOS 12.0, iOS 15, *)
 public struct CanvasPolyGrid2: View {
     
     let canvasCoordinate: CCanvasCoordinate
@@ -120,7 +120,7 @@ public struct CanvasPolyGrid2: View {
     
 }
 
-@available(macOS 12.0, *)
+@available(macOS 12.0, iOS 15, *)
 struct CanvasPolyGrid2_Previews: PreviewProvider {
     static var previews: some View {
         CanvasPolyGrid2(size: 100, canvasCoordinate: .zero)
