@@ -14,16 +14,16 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
 
     func makeView(context: Context) -> CCanvasInteractView {
         CCanvasInteractView(canvas: canvas,
-                           didMoveCCanvasInteractions: context.coordinator.didMoveCCanvasInteractions(_:),
-                           didStartScroll: context.coordinator.didStartScroll,
-                           didScroll: context.coordinator.didScroll(_:),
-                           didEndScroll: context.coordinator.didEndScroll,
-                           didStartMagnify: context.coordinator.didStartMagnify,
-                           didMagnify: context.coordinator.didMagnify(_:),
-                           didEndMagnify: context.coordinator.didEndMagnify,
-                           didStartRotate: context.coordinator.didStartRotate,
-                           didRotate: context.coordinator.didRotate(_:),
-                           didEndRotate: context.coordinator.didEndRotate)
+                            didMoveCCanvasInteractions: context.coordinator.didMoveCCanvasInteractions(_:),
+                            didStartScroll: context.coordinator.didStartScroll,
+                            didScroll: context.coordinator.didScroll(_:),
+                            didEndScroll: context.coordinator.didEndScroll,
+                            didStartMagnify: context.coordinator.didStartMagnify,
+                            didMagnify: context.coordinator.didMagnify(_:),
+                            didEndMagnify: context.coordinator.didEndMagnify,
+                            didStartRotate: context.coordinator.didStartRotate,
+                            didRotate: context.coordinator.didRotate(_:),
+                            didEndRotate: context.coordinator.didEndRotate)
     }
     
     func updateView(_ canvasInteractView: CCanvasInteractView, context: Context) {

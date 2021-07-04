@@ -59,12 +59,12 @@ public class CCanvasInteractView: MPView {
         #endif
         
         #if os(macOS)
-        NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) {
-            self.flagsChanged(with: $0)
+        NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] in
+            self?.flagsChanged(with: $0)
             return $0
         }
-        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) {
-            self.mouseMoved(with: $0)
+        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] in
+            self?.mouseMoved(with: $0)
             return $0
         }
         #endif
@@ -186,7 +186,7 @@ public class CCanvasInteractView: MPView {
 //                  canvas.window == nil ? "(Canvas Window Missing)" : "")
 //        }
         guard let window: NSWindow = canvas.window ?? window else { return nil }
-        let title: String = window.title
+//        let title: String = window.title
         let mouseLocation: CGPoint = window.mouseLocationOutsideOfEventStream
         guard let windowView: NSView = window.contentView else { return nil }
         var point: CGPoint = convert(.zero, to: windowView)
@@ -211,9 +211,9 @@ public class CCanvasInteractView: MPView {
         didScroll(delta)
         
         scrollTimer?.invalidate()
-        scrollTimer = Timer(timeInterval: scrollTimeout, repeats: false, block: { _ in
-            self.scrollTimer = nil
-            self.didEndScroll()
+        scrollTimer = Timer(timeInterval: scrollTimeout, repeats: false, block: { [weak self] _ in
+            self?.scrollTimer = nil
+            self?.didEndScroll()
         })
         RunLoop.current.add(scrollTimer!, forMode: .common)
     }

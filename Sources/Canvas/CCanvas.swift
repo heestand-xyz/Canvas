@@ -13,6 +13,7 @@ public class CCanvas: ObservableObject, Codable, Identifiable {
     let snapGridToAngle: Angle?
     
     #if os(macOS)
+    #warning("Window can't be weak, it will crash on second window close.")
     public var window: NSWindow?
     #endif
     
@@ -151,10 +152,10 @@ public extension CCanvas {
         let currentScale: CGFloat = self.scale
         let currentAngle: Angle = self.angle
         if let duration: CGFloat = animatedDuration {
-            CCanvasAnimation.animate(for: duration, ease: .easeInOut) { fraction in
-                self.offset = currentOffset * (1.0 - fraction) + coordinate.offset * fraction
-                self.scale = currentScale * (1.0 - fraction) + coordinate.scale * fraction
-                self.angle = Angle(degrees: currentAngle.degrees * Double(1.0 - fraction) + coordinate.angle.degrees * Double(fraction))
+            CCanvasAnimation.animate(for: duration, ease: .easeInOut) { [weak self] fraction in
+                self?.offset = currentOffset * (1.0 - fraction) + coordinate.offset * fraction
+                self?.scale = currentScale * (1.0 - fraction) + coordinate.scale * fraction
+                self?.angle = Angle(degrees: currentAngle.degrees * Double(1.0 - fraction) + coordinate.angle.degrees * Double(fraction))
             }
         } else {
             self.offset = coordinate.offset
