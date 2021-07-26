@@ -308,7 +308,8 @@ extension CCanvasInteractView: NodeContextActions {
 
 public protocol AreaContextActions {
     func contextPaseNodes()
-    func contextFitCanvas()
+    func contextZoomToCircle()
+    func contextZoomToNodes()
 }
 
 extension CCanvasInteractView: AreaContextActions {
@@ -319,8 +320,12 @@ extension CCanvasInteractView: AreaContextActions {
         CCanvasInteractView.areaContextActions?.contextPaseNodes()
     }
     
-    @objc public func contextFitCanvas() {
-        CCanvasInteractView.areaContextActions?.contextFitCanvas()
+    @objc public func contextZoomToCircle() {
+        CCanvasInteractView.areaContextActions?.contextZoomToCircle()
+    }
+    
+    @objc public func contextZoomToNodes() {
+        CCanvasInteractView.areaContextActions?.contextZoomToNodes()
     }
 }
 
