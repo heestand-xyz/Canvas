@@ -15,7 +15,7 @@ public struct CCanvasDrag: Hashable, Equatable {
                 case .standard:
                     return 0.98
                 case .heavy:
-                    return 0.95
+                    return 0.96
                 }
             }
         }
