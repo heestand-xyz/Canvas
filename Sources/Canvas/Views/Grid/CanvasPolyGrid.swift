@@ -87,6 +87,7 @@ public struct CanvasPolyGrid: View {
     
     func count(size: CGSize, at superScale: CGFloat, extraScale: CGFloat) -> Int {
         let scaledSize: CGSize = (size / (spacing * superScale)) * extraScale
+        guard !scaledSize.width.isNaN else { return 1 }
         return max(Int(scaledSize.width), Int(scaledSize.height))
     }
     
