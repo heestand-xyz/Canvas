@@ -67,6 +67,18 @@ public class CCanvasInteractView: MPView {
             self?.mouseMoved(with: $0)
             return $0
         }
+        NSEvent.addLocalMonitorForEvents(matching: .magnify) { [weak self] in
+            self?.magnify(with: $0)
+            return $0
+        }
+        NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { [weak self] in
+            self?.mouseUp(with: $0)
+            return $0
+        }
+        NSEvent.addLocalMonitorForEvents(matching: .rotate) { [weak self] in
+            self?.rotate(with: $0)
+            return $0
+        }
         #endif
         
     }
