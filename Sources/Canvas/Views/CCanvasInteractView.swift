@@ -291,6 +291,7 @@ public protocol NodeContextActions {
     func contextRemove()
     func contextFillView()
     func contextFullscreen()
+    func contextSaveImage()
 }
 
 extension CCanvasInteractView: NodeContextActions {
@@ -315,6 +316,10 @@ extension CCanvasInteractView: NodeContextActions {
     
     @objc public func contextFullscreen() {
         CCanvasInteractView.nodeContextActions?.contextFullscreen()
+    }
+    
+    @objc public func contextSaveImage() {
+        CCanvasInteractView.nodeContextActions?.contextSaveImage()
     }
 }
 
