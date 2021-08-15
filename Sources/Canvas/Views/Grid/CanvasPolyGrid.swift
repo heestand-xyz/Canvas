@@ -93,7 +93,7 @@ public struct CanvasPolyGrid: View {
     
 }
 
-struct CanvasPolyGrid_Previews: PreviewProvider {
+struct CanvasPolyGrid_Previews: SwiftUI.PreviewProvider {
     static var previews: some View {
         CanvasPolyGrid(size: 100, canvasCoordinate: .zero)
     }

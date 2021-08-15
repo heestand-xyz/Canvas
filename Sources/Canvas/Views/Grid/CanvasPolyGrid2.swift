@@ -121,7 +121,7 @@ public struct CanvasPolyGrid2: View {
 }
 
 @available(macOS 12.0, iOS 15, *)
-struct CanvasPolyGrid2_Previews: PreviewProvider {
+struct CanvasPolyGrid2_Previews: SwiftUI.PreviewProvider {
     static var previews: some View {
         CanvasPolyGrid2(size: 100, canvasCoordinate: .zero)
     }

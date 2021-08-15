@@ -32,7 +32,7 @@ public struct CanvasFadeMask: View {
     }
 }
 
-struct CanvasFadeMask_Previews: PreviewProvider {
+struct CanvasFadeMask_Previews: SwiftUI.PreviewProvider {
     static var previews: some View {
         CanvasFadeMask(distance: 100)
     }
