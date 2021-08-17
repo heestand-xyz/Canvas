@@ -17,10 +17,11 @@ let package = Package(
         .package(url: "https://github.com/heestand-xyz/MultiViews", from: "1.3.1"),
         .package(url: "https://github.com/heestand-xyz/CoreGraphicsExtensions", from: "1.0.1"),
         .package(url: "https://github.com/heestand-xyz/DisplayLink", from: "1.0.1"),
+        .package(url: "https://github.com/heestand-xyz/Logger", from: "0.1.0"),
     ],
     targets: [
         .target(
             name: "Canvas",
-            dependencies: ["MultiViews", "CoreGraphicsExtensions", "DisplayLink"]),
+            dependencies: ["MultiViews", "CoreGraphicsExtensions", "DisplayLink", "Logger"]),
       ]
 )

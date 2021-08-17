@@ -1,6 +1,7 @@
 import SwiftUI
 import MultiViews
 import CoreGraphicsExtensions
+import Logger
 
 public class CCanvasInteractView: MPView {
     
@@ -60,25 +61,40 @@ public class CCanvasInteractView: MPView {
         
         #if os(macOS)
         NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] in
+            Logger.log(message: "Monitor - Flags Changed")
             self?.flagsChanged(with: $0)
             return $0
         }
-        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] in
-            self?.mouseMoved(with: $0)
-            return $0
-        }
-        NSEvent.addLocalMonitorForEvents(matching: .magnify) { [weak self] in
-            self?.magnify(with: $0)
-            return $0
-        }
+//        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] in
+//            self?.mouseMoved(with: $0)
+//            return $0
+//        }
+//        NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] in
+//            Logger.log(message: "Monitor - Left Mouse Down")
+//            self?.mouseDown(with: $0)
+//            return $0
+//        }
+//        NSEvent.addLocalMonitorForEvents(matching: .leftMouseDragged) { [weak self] in
+//            self?.mouseDragged(with: $0)
+//            return $0
+//        }
+//        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] in
+//            self?.mouseMoved(with: $0)
+//            return $0
+//        }
         NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { [weak self] in
+            Logger.log(message: "Monitor - Left Mouse Up")
             self?.mouseUp(with: $0)
             return $0
         }
-        NSEvent.addLocalMonitorForEvents(matching: .rotate) { [weak self] in
-            self?.rotate(with: $0)
-            return $0
-        }
+//        NSEvent.addLocalMonitorForEvents(matching: .magnify) { [weak self] in
+//            self?.magnify(with: $0)
+//            return $0
+//        }
+//        NSEvent.addLocalMonitorForEvents(matching: .rotate) { [weak self] in
+//            self?.rotate(with: $0)
+//            return $0
+//        }
         #endif
         
     }
@@ -86,6 +102,18 @@ public class CCanvasInteractView: MPView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    #if os(macOS)
+    public override func updateTrackingAreas() {
+        let trackingArea = NSTrackingArea(rect: bounds, options: [
+            .mouseMoved,
+            .enabledDuringMouseDrag,
+            .mouseEnteredAndExited,
+            .activeInKeyWindow,
+        ], owner: self, userInfo: nil)
+        addTrackingArea(trackingArea)
+    }
+    #endif
     
     #if os(iOS)
     public override var canBecomeFirstResponder: Bool { true }
@@ -104,6 +132,7 @@ public class CCanvasInteractView: MPView {
     // MARK: - Touch
     
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        Logger.log()
         for touch in touches {
             let id = UUID()
             let location: CGPoint = touch.location(in: self)
@@ -131,6 +160,7 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        Logger.log()
         for touch in touches {
             guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
                 canvasInteraction.touch == touch
@@ -140,6 +170,7 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        Logger.log()
         for touch in touches {
             guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
                 canvasInteraction.touch == touch
@@ -153,6 +184,7 @@ public class CCanvasInteractView: MPView {
     // MARK: - Mouse
     
     public override func mouseDown(with event: NSEvent) {
+        Logger.log()
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         let id = UUID()
         let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, isAlternative: false))
@@ -160,6 +192,7 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func rightMouseDown(with event: NSEvent) {
+        Logger.log()
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         let id = UUID()
         let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, isAlternative: true))
@@ -167,11 +200,13 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func mouseUp(with event: NSEvent) {
+        Logger.log()
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
     
     public override func rightMouseUp(with event: NSEvent) {
+        Logger.log()
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
@@ -230,7 +265,7 @@ public class CCanvasInteractView: MPView {
         RunLoop.current.add(scrollTimer!, forMode: .common)
     }
     
-    // MARK: - MAgnify
+    // MARK: - Magnify
     
     public override func magnify(with event: NSEvent) {
         switch event.phase {
