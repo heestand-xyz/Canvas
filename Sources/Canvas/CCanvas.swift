@@ -35,7 +35,7 @@ public class CCanvas: ObservableObject, Codable, Identifiable {
     @Published public var size: CGSize = .zero
 
     public var centerLocation: CGPoint { size.point / 2 }
-    public var centerPosition: CGPoint { coordinate.absolute(location: centerLocation) }
+    public var centerPosition: CGPoint { coordinate.position(at: centerLocation) }
 
     @Published var interactions: Set<CCanvasInteraction> = []
     @Published var panInteraction: CCanvasInteraction? = nil
@@ -44,6 +44,8 @@ public class CCanvas: ObservableObject, Codable, Identifiable {
     
     @Published public var keyboardFlags: Set<CCanvasKeyboardFlag> = []
     @Published public var mouseLocation: CGPoint? = nil
+    
+    public var interactionEnabled: Bool = true
 
     public init(physics: Bool = iOS, snapGridToAngle: Angle? = nil) {
         self.id = UUID()

@@ -133,6 +133,7 @@ public class CCanvasInteractView: MPView {
     
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         Logger.log()
+        guard canvas.interactionEnabled else { return }
         for touch in touches {
             let id = UUID()
             let location: CGPoint = touch.location(in: self)
@@ -143,6 +144,7 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard canvas.interactionEnabled else { return }
         var movedCCanvasInteractions: Set<CCanvasInteraction> = []
         for touch in touches {
             guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
@@ -161,6 +163,7 @@ public class CCanvasInteractView: MPView {
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         Logger.log()
+        guard canvas.interactionEnabled else { return }
         for touch in touches {
             guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
                 canvasInteraction.touch == touch
@@ -171,6 +174,7 @@ public class CCanvasInteractView: MPView {
     
     public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         Logger.log()
+        guard canvas.interactionEnabled else { return }
         for touch in touches {
             guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
                 canvasInteraction.touch == touch
@@ -185,6 +189,7 @@ public class CCanvasInteractView: MPView {
     
     public override func mouseDown(with event: NSEvent) {
         Logger.log()
+        guard canvas.interactionEnabled else { return }
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         let id = UUID()
         let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, isAlternative: false))
@@ -193,6 +198,7 @@ public class CCanvasInteractView: MPView {
     
     public override func rightMouseDown(with event: NSEvent) {
         Logger.log()
+        guard canvas.interactionEnabled else { return }
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         let id = UUID()
         let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, isAlternative: true))
@@ -201,17 +207,20 @@ public class CCanvasInteractView: MPView {
     
     public override func mouseUp(with event: NSEvent) {
         Logger.log()
+        guard canvas.interactionEnabled else { return }
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
     
     public override func rightMouseUp(with event: NSEvent) {
         Logger.log()
+        guard canvas.interactionEnabled else { return }
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
     
     public override func mouseDragged(with event: NSEvent) {
+        guard canvas.interactionEnabled else { return }
         guard let location: CGPoint = getMouseLocation(event: event) else { return }
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         let lastLocation: CGPoint = canvasInteraction.location
