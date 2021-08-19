@@ -87,14 +87,14 @@ public class CCanvasInteractView: MPView {
             self?.mouseUp(with: $0)
             return $0
         }
-//        NSEvent.addLocalMonitorForEvents(matching: .magnify) { [weak self] in
-//            self?.magnify(with: $0)
-//            return $0
-//        }
-//        NSEvent.addLocalMonitorForEvents(matching: .rotate) { [weak self] in
-//            self?.rotate(with: $0)
-//            return $0
-//        }
+        NSEvent.addLocalMonitorForEvents(matching: .magnify) { [weak self] in
+            self?.magnify(with: $0)
+            return $0
+        }
+        NSEvent.addLocalMonitorForEvents(matching: .rotate) { [weak self] in
+            self?.rotate(with: $0)
+            return $0
+        }
         #endif
         
     }
@@ -190,7 +190,7 @@ public class CCanvasInteractView: MPView {
     public override func mouseDown(with event: NSEvent) {
         Logger.log()
         guard canvas.interactionEnabled else { return }
-        guard let location: CGPoint = getMouseLocation(event: event) else { return }
+        guard let location: CGPoint = getMouseLocation() else { return }
         let id = UUID()
         let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, isAlternative: false))
         canvas.interactions.insert(canvasInteraction)
@@ -199,7 +199,7 @@ public class CCanvasInteractView: MPView {
     public override func rightMouseDown(with event: NSEvent) {
         Logger.log()
         guard canvas.interactionEnabled else { return }
-        guard let location: CGPoint = getMouseLocation(event: event) else { return }
+        guard let location: CGPoint = getMouseLocation() else { return }
         let id = UUID()
         let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, isAlternative: true))
         canvas.interactions.insert(canvasInteraction)
@@ -221,7 +221,7 @@ public class CCanvasInteractView: MPView {
     
     public override func mouseDragged(with event: NSEvent) {
         guard canvas.interactionEnabled else { return }
-        guard let location: CGPoint = getMouseLocation(event: event) else { return }
+        guard let location: CGPoint = getMouseLocation() else { return }
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         let lastLocation: CGPoint = canvasInteraction.location
         canvasInteraction.location = location
@@ -232,10 +232,10 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func mouseMoved(with event: NSEvent) {
-        canvas.mouseLocation = getMouseLocation(event: event)
+        canvas.mouseLocation = getMouseLocation()
     }
     
-    func getMouseLocation(event: NSEvent) -> CGPoint? {
+    func getMouseLocation() -> CGPoint? {
 //        if window == nil || canvas.window == nil {
 //            print("Some Mouse Window is Missing",
 //                  window == nil ? "(View Window Missing)" : "",
@@ -277,6 +277,8 @@ public class CCanvasInteractView: MPView {
     // MARK: - Magnify
     
     public override func magnify(with event: NSEvent) {
+        guard let mouseLocation: CGPoint = getMouseLocation() else { return }
+        guard bounds.contains(mouseLocation) else { return }
         switch event.phase {
         case .began:
             didStartMagnify()
@@ -293,6 +295,8 @@ public class CCanvasInteractView: MPView {
     // MARK: - Rotate
     
     public override func rotate(with event: NSEvent) {
+        guard let mouseLocation: CGPoint = getMouseLocation() else { return }
+        guard bounds.contains(mouseLocation) else { return }
         switch event.phase {
         case .began:
             didStartRotate()
