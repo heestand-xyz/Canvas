@@ -9,7 +9,7 @@ public protocol CCanvasDelegate: AnyObject {
     func canvasDragSetPosition(_ drag: CCanvasDrag, to position: CGPoint, coordinate: CCanvasCoordinate)
 
     func canvasDragStarted(_ drag: CCanvasDrag, at position: CGPoint, info: CCanvasInteractionInfo, keyboardFlags: Set<CCanvasKeyboardFlag>, coordinate: CCanvasCoordinate)
-    func canvasDragReleased(_ drag: CCanvasDrag, at position: CGPoint, info: CCanvasInteractionInfo, keyboardFlags: Set<CCanvasKeyboardFlag>, coordinate: CCanvasCoordinate)
+    func canvasDragReleased(_ drag: CCanvasDrag, at position: CGPoint, ignoreTap: Bool, info: CCanvasInteractionInfo, keyboardFlags: Set<CCanvasKeyboardFlag>, coordinate: CCanvasCoordinate)
     func canvasDragWillEnd(_ drag: CCanvasDrag, at position: CGPoint, coordinate: CCanvasCoordinate)
     func canvasDragDidEnd(_ drag: CCanvasDrag, at position: CGPoint, coordinate: CCanvasCoordinate)
     

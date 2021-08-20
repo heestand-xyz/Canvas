@@ -75,32 +75,32 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
         
         func frameLoop() {
             
+            func endDrag(of interaction: CCanvasInteraction) {
+                if let dragInteraction: CCanvasDragInteraction = canvas.dragInteractions.first(where: { dragInteraction in
+                    dragInteraction.interaction == interaction
+                }) {
+                    let position: CGPoint = canvas.coordinate.position(at: interaction.location)
+                    canvas.delegate?.canvasDragWillEnd(dragInteraction.drag, at: position, coordinate: canvas.coordinate)
+                    snapToGrid(dragInteraction) { [weak self] in
+                        guard let coordinate: CCanvasCoordinate = self?.canvas.coordinate else { return }
+                        self?.canvas.delegate?.canvasDragDidEnd(dragInteraction.drag, at: position, coordinate: coordinate)
+                    }
+                }
+            }
+            
+            func snapToGrid(_ dragInteraction: CCanvasDragInteraction, done: @escaping () -> ()) {
+                guard let snapGrid: CCanvasSnapGrid = dragInteraction.drag.snapGrid else { done(); return }
+                guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag, coordinate: canvas.coordinate) else { done(); return }
+                if !isOnGrid(position: position, snapGrid: snapGrid) {
+                    dragDone(dragInteraction: dragInteraction, done: done)
+                }
+            }
+            
             for interaction in canvas.interactions {
                 
                 func remove() {
                     canvas.interactions.remove(interaction)
-                    endDrag()
-                }
-                
-                func endDrag() {
-                    if let dragInteraction: CCanvasDragInteraction = canvas.dragInteractions.first(where: { dragInteraction in
-                        dragInteraction.interaction == interaction
-                    }) {
-                        let position: CGPoint = canvas.coordinate.position(at: interaction.location)
-                        canvas.delegate?.canvasDragWillEnd(dragInteraction.drag, at: position, coordinate: canvas.coordinate)
-                        snapToGrid(dragInteraction) { [weak self] in
-                            guard let coordinate: CCanvasCoordinate = self?.canvas.coordinate else { return }
-                            self?.canvas.delegate?.canvasDragDidEnd(dragInteraction.drag, at: position, coordinate: coordinate)
-                        }
-                    }
-                }
-                
-                func snapToGrid(_ dragInteraction: CCanvasDragInteraction, done: @escaping () -> ()) {
-                    guard let snapGrid: CCanvasSnapGrid = dragInteraction.drag.snapGrid else { done(); return }
-                    guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag, coordinate: canvas.coordinate) else { done(); return }
-                    if !isOnGrid(position: position, snapGrid: snapGrid) {
-                        dragDone(dragInteraction: dragInteraction, done: done)
-                    }
+                    endDrag(of: interaction)
                 }
                 
                 if !interaction.active || interaction.timeout {
@@ -115,7 +115,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                         }) {
                             dragPhysics = dragInteraction.drag.physics
                             let position: CGPoint = canvas.coordinate.position(at: interaction.location)
-                            canvas.delegate?.canvasDragReleased(dragInteraction.drag, at: position, info: interaction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                            canvas.delegate?.canvasDragReleased(dragInteraction.drag, at: position, ignoreTap: false, info: interaction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                         }
                         guard canvas.physics && dragPhysics?.hasForce != false else {
                             remove()
@@ -133,11 +133,6 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                         continue
                     }
                     
-//                    guard !interaction.pickedUpByOther else {
-//                        remove()
-//                        continue
-//                    }
-                    
                     #if os(iOS)
                     
                     interaction.location += interaction.velocity
@@ -151,33 +146,35 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                 
             }
             
-            /// Drag
+            // MARK: Drag
+            
             let filteredPotentialDragInteractions: [CCanvasInteraction] = canvas.interactions.filter { interaction in
                 interaction.active && !canvas.dragInteractions.map(\.interaction).contains(interaction) && interaction != canvas.panInteraction && interaction != canvas.pinchInteraction?.0 && interaction != canvas.pinchInteraction?.1
             }
+            /// End
             for dragInteraction in canvas.dragInteractions {
                 let isInteracting: Bool = canvas.interactions.contains(dragInteraction.interaction)
                 if !isInteracting {
                     canvas.dragInteractions.remove(dragInteraction)
                 }
             }
+            /// Start
             for interaction in filteredPotentialDragInteractions {
                 let interactionPosition: CGPoint = canvas.coordinate.position(at: interaction.location)
                 guard let drag: CCanvasDrag = canvas.delegate?.canvasDragHitTest(at: interactionPosition, coordinate: canvas.coordinate) else { continue }
                 guard !canvas.dragInteractions.filter({ $0.interaction.active }).contains(where: { $0.drag.id == drag.id }) else { continue }
-//                if let oldDragInteraction: CCanvasDragInteraction = canvas.dragInteractions.filter({ $0.interaction.auto }).first(where: { $0.drag.id == drag.id }) {
-//                    oldDragInteraction.interaction.pickedUpByOther = true
-//                }
                 let dragInteraction = CCanvasDragInteraction(drag: drag, interaction: interaction)
                 canvas.dragInteractions.insert(dragInteraction)
                 let position: CGPoint = canvas.coordinate.position(at: interaction.location)
                 canvas.delegate?.canvasDragStarted(drag, at: position, info: interaction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
             }
-              
-            /// Pinch
+            
+            // MARK: Pinch
+            
             let filteredPotentialPinchInteractions: [CCanvasInteraction] = canvas.interactions.filter { interaction in
-                interaction.active && !canvas.dragInteractions.contains(where: { $0.interaction == interaction })
+                interaction.active
             }
+            /// End
             if let pinchInteraction: (CCanvasInteraction, CCanvasInteraction) = canvas.pinchInteraction {
                 let isInteracting: Bool = filteredPotentialPinchInteractions.contains(pinchInteraction.0) && filteredPotentialPinchInteractions.contains(pinchInteraction.1)
                 if !isInteracting {
@@ -191,17 +188,38 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                     canvas.pinchInteraction = nil
                 }
             }
+            /// Start
             if canvas.pinchInteraction == nil {
                 if filteredPotentialPinchInteractions.count >= 2 {
+                    
+                    /// End Drag
+                    if let firstDragInteraciton = canvas.dragInteractions.first(where: { $0.interaction == filteredPotentialPinchInteractions[0] }) {
+                        let position: CGPoint = canvas.coordinate.position(at: firstDragInteraciton.interaction.location)
+                        canvas.delegate?.canvasDragReleased(firstDragInteraciton.drag, at: position, ignoreTap: true, info: firstDragInteraciton.interaction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                        endDrag(of: firstDragInteraciton.interaction)
+                        canvas.dragInteractions.remove(firstDragInteraciton)
+                    }
+                    if let secondDragInteraction = canvas.dragInteractions.first(where: { $0.interaction == filteredPotentialPinchInteractions[1] }) {
+                        let position: CGPoint = canvas.coordinate.position(at: secondDragInteraction.interaction.location)
+                        canvas.delegate?.canvasDragReleased(secondDragInteraction.drag, at: position, ignoreTap: true, info: secondDragInteraction.interaction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                        endDrag(of: secondDragInteraction.interaction)
+                        canvas.dragInteractions.remove(secondDragInteraction)
+                    }
+                    
+                    /// Start Pinch
                     canvas.pinchInteraction = (filteredPotentialPinchInteractions[0], filteredPotentialPinchInteractions[1])
+                    
+                    /// End Pan
                     canvas.panInteraction = nil
                 }
             }
             
-            /// Pan
+            // MARK: Pan
+            
             let filteredPotentialPanInteractions: [CCanvasInteraction] = canvas.interactions.filter { interaction in
                 interaction.active && !canvas.dragInteractions.contains(where: { $0.interaction == interaction })
             }
+            /// End
             if let panInteraction: CCanvasInteraction = canvas.panInteraction {
                 let isInteracting: Bool = canvas.interactions.contains(panInteraction)
                 let interactionPosition: CGPoint = canvas.coordinate.position(at: panInteraction.location)
@@ -223,6 +241,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                     }
                 }
             }
+            /// Start
             if canvas.panInteraction == nil && canvas.pinchInteraction == nil {
                 if filteredPotentialPanInteractions.count == 1 {
                     canvas.panInteraction = filteredPotentialPanInteractions[0]
@@ -235,13 +254,15 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                 }
             }
             
-            /// Auto Pan
+            // MARK: Auto
+            
+            /// Pan
             if let panInteraction: CCanvasInteraction = canvas.panInteraction,
                panInteraction.auto {
                 pan()
             }
             
-            /// Auto Drag
+            /// Drag
             for dragInteraction in canvas.dragInteractions {
                 guard dragInteraction.interaction.auto else { continue }
                 drag(dragInteraction: dragInteraction)
