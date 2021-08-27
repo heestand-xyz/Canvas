@@ -59,6 +59,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
         let snapAngleThreshold: Angle = Angle(degrees: 5)
         let isOnGridRadiusThreshold: CGFloat = 0.2
         let initialRotationThreshold: Angle = Angle(degrees: 10)
+        let zoomScrollVelocityMultiplier: CGFloat = 0.004
 
         @ObservedObject var canvas: CCanvas
 
@@ -306,7 +307,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
         func didScroll(_ velocity: CGVector) {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             if canvas.keyboardFlags.contains(.command) {
-                let relativeScale: CGFloat = 1.0 + velocity.dy * 0.0025
+                let relativeScale: CGFloat = 1.0 + velocity.dy * zoomScrollVelocityMultiplier
                 scaleCanvas(by: relativeScale, at: mouseLocation)
             } else if canvas.keyboardFlags.contains(.option) {
                 let relativeAngle: Angle = Angle(degrees: Double(velocity.dy) * 0.5)

@@ -46,6 +46,7 @@ public class CCanvas: ObservableObject, Codable, Identifiable {
     @Published public var mouseLocation: CGPoint? = nil
     
     public var interactionEnabled: Bool = true
+    public var trackpadEnabled: Bool = true
 
     public init(physics: Bool = iOS, snapGridToAngle: Angle? = nil) {
         self.id = UUID()
@@ -194,7 +195,7 @@ public extension CCanvas {
 public extension CCanvas {
     
     var originCoordinate: CCanvasCoordinate {
-        CCanvasCoordinate(offset: size.point / 2, scale: 1.0, angle: .zero)
+        CCanvasCoordinate(offset: size.asPoint / 2, scale: 1.0, angle: .zero)
     }
     
     func resetToOrigin(animated: Bool = false) {
@@ -207,7 +208,7 @@ public extension CCanvas {
 
 public extension CCanvas {
     
-    func fitCoordinate(in frame: CGRect, padding: CGFloat) -> CCanvasCoordinate {
+    func fitCoordinate(in frame: CGRect, padding: CGFloat = 0.0) -> CCanvasCoordinate {
         
         guard size != .zero else { return .zero }
         
@@ -227,7 +228,7 @@ public extension CCanvas {
         return fitCoordinate
     }
     
-    func fit(in frame: CGRect, padding: CGFloat, animated: Bool = false) {
+    func fit(in frame: CGRect, padding: CGFloat = 0.0, animated: Bool = false) {
         move(to: fitCoordinate(in: frame, padding: padding), animatedDuration: animated ? 0.25 : nil)
     }
 }

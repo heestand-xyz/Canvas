@@ -256,6 +256,7 @@ public class CCanvasInteractView: MPView {
     // MARK: - Scroll
     
     public override func scrollWheel(with event: NSEvent) {
+        guard canvas.trackpadEnabled else { return }
         
         let delta: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
         
@@ -277,6 +278,7 @@ public class CCanvasInteractView: MPView {
     // MARK: - Magnify
     
     public override func magnify(with event: NSEvent) {
+        guard canvas.trackpadEnabled else { return }
         guard let mouseLocation: CGPoint = getMouseLocation() else { return }
         guard bounds.contains(mouseLocation) else { return }
         switch event.phase {
@@ -295,6 +297,7 @@ public class CCanvasInteractView: MPView {
     // MARK: - Rotate
     
     public override func rotate(with event: NSEvent) {
+        guard canvas.trackpadEnabled else { return }
         guard let mouseLocation: CGPoint = getMouseLocation() else { return }
         guard bounds.contains(mouseLocation) else { return }
         switch event.phase {
