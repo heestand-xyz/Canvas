@@ -34,22 +34,22 @@ public struct CCanvasView: View {
 //            }
 //            #endif
             
-            #if DEBUG
-            ZStack(alignment: .bottomLeading) {
-                Color.clear
-                HStack {
-                    Group {
-                        Text("x: \(canvas.offset.x)")
-                        Text("y: \(canvas.offset.y)")
-                        Text("s: \(canvas.scale)")
-                        Text("a: \(canvas.angle.degrees)")
-                    }
-                    .font(.system(.footnote, design: .monospaced))
-                    .frame(width: 85)
-                }
-                .padding(5)
-            }
-            #endif
+//            #if DEBUG
+//            ZStack(alignment: .bottomLeading) {
+//                Color.clear
+//                HStack {
+//                    Group {
+//                        Text("x: \(canvas.offset.x)")
+//                        Text("y: \(canvas.offset.y)")
+//                        Text("s: \(canvas.scale)")
+//                        Text("a: \(canvas.angle.degrees)")
+//                    }
+//                    .font(.system(.footnote, design: .monospaced))
+//                    .frame(width: 85)
+//                }
+//                .padding(5)
+//            }
+//            #endif
             
             // Interact
             CCanvasInteractViewRepresentable(canvas: canvas)
