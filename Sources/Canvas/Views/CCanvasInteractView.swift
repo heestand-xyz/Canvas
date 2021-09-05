@@ -24,6 +24,7 @@ public class CCanvasInteractView: MPView {
     var scrollTimer: Timer?
     let scrollTimeout: Double = 0.15
     let scrollThreshold: CGFloat = 1.5
+    let middleMouseScrollVelocityMultiplier: CGFloat = 10
     #endif
 
     init(canvas: CCanvas,
@@ -296,7 +297,7 @@ public class CCanvasInteractView: MPView {
         
         var delta: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
         if !event.hasPreciseScrollingDeltas {
-            delta *= 10
+            delta *= middleMouseScrollVelocityMultiplier
         }
         
         if scrollTimer == nil {
