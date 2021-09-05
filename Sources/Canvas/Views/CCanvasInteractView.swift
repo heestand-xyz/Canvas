@@ -192,7 +192,7 @@ public class CCanvasInteractView: MPView {
         guard canvas.interactionEnabled else { return }
         guard let location: CGPoint = getMouseLocation() else { return }
         let id = UUID()
-        let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, isAlternative: false))
+        let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, mouseButton: .left))
         canvas.interactions.insert(canvasInteraction)
     }
     
@@ -201,8 +201,23 @@ public class CCanvasInteractView: MPView {
         guard canvas.interactionEnabled else { return }
         guard let location: CGPoint = getMouseLocation() else { return }
         let id = UUID()
-        let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, isAlternative: true))
+        let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, mouseButton: .right))
         canvas.interactions.insert(canvasInteraction)
+    }
+    public override func otherMouseDown(with event: NSEvent) {
+        Logger.log()
+        if event.buttonNumber == 2 {
+            /// Middle Mouse Button
+            guard canvas.interactionEnabled else { return }
+            guard let location: CGPoint = getMouseLocation() else { return }
+            let id = UUID()
+            let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, mouseButton: .middle))
+            canvas.interactions.insert(canvasInteraction)
+        } else if event.buttonNumber == 3 {
+            /// Back Mouse Button
+        } else if event.buttonNumber == 4 {
+            /// Forward Mouse Button
+        }
     }
     
     public override func mouseUp(with event: NSEvent) {
@@ -219,7 +234,33 @@ public class CCanvasInteractView: MPView {
         canvasInteraction.active = false
     }
     
+    public override func otherMouseUp(with event: NSEvent) {
+        if event.buttonNumber == 2 {
+            /// Middle Mouse Button
+            Logger.log()
+            guard canvas.interactionEnabled else { return }
+            guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
+            canvasInteraction.active = false
+        } else if event.buttonNumber == 3 {
+            /// Back Mouse Button
+        } else if event.buttonNumber == 4 {
+            /// Forward Mouse Button
+        }
+    }
+    
     public override func mouseDragged(with event: NSEvent) {
+        mouseDragged()
+    }
+    
+    public override func rightMouseDragged(with event: NSEvent) {
+        mouseDragged()
+    }
+    
+    public override func otherMouseDragged(with event: NSEvent) {
+        mouseDragged()
+    }
+    
+    func mouseDragged() {
         guard canvas.interactionEnabled else { return }
         guard let location: CGPoint = getMouseLocation() else { return }
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }

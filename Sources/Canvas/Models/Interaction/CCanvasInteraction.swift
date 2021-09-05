@@ -10,10 +10,12 @@ public struct CCanvasInteractionInfo {
     public let view: MPView
     #if os(macOS)
     public let event: NSEvent
-    /// Right mouse click.
-    public let isAlternative: Bool
-    #else
-    public let isAlternative: Bool = false
+    public enum MouseButton {
+        case left
+        case right
+        case middle
+    }
+    public let mouseButton: MouseButton
     #endif
 }
 
@@ -21,6 +23,7 @@ class CCanvasInteraction: Identifiable {
     
     let id: UUID
     
+    let startLocation: CGPoint
     var location: CGPoint {
         didSet {
             refreshTimeout()
@@ -65,6 +68,7 @@ class CCanvasInteraction: Identifiable {
          location: CGPoint,
          info: CCanvasInteractionInfo) {
         self.id = id
+        self.startLocation = location
         self.location = location
         self.velocity = CGVector(dx: 0.0, dy: 0.0)
         self.active = true

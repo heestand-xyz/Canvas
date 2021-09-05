@@ -60,6 +60,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
         let isOnGridRadiusThreshold: CGFloat = 0.2
         let initialRotationThreshold: Angle = Angle(degrees: 10)
         let zoomScrollVelocityMultiplier: CGFloat = 0.004
+        let middleMouseDragVelocityMultiplier: CGFloat = 0.01
 
         @ObservedObject var canvas: CCanvas
 
@@ -228,7 +229,11 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                     #if os(iOS)
                     canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #elseif os(macOS)
-                    canvas.delegate?.canvasSelectionEnded(at: interactionPosition, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    if panInteraction.info.mouseButton == .left {
+                        canvas.delegate?.canvasSelectionEnded(at: interactionPosition, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    } else if [.right, .middle].contains(panInteraction.info.mouseButton) {
+                        canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    }
                     #endif
                     canvas.panInteraction = nil
                 } else if !panInteraction.active {
@@ -236,7 +241,11 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                         #if os(iOS)
                         canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                         #elseif os(macOS)
-                        canvas.delegate?.canvasSelectionEnded(at: interactionPosition, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                        if panInteraction.info.mouseButton == .left {
+                            canvas.delegate?.canvasSelectionEnded(at: interactionPosition, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                        } else if [.right, .middle].contains(panInteraction.info.mouseButton) {
+                            canvas.delegate?.canvasMoveEnded(at: interactionPosition, viaScroll: false, info: panInteraction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                        }
                         #endif
                         canvas.panInteraction = nil
                     }
@@ -250,7 +259,11 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                     #if os(iOS)
                     canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #elseif os(macOS)
-                    canvas.delegate?.canvasSelectionStarted(at: interactionPosition, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    if canvas.panInteraction!.info.mouseButton == .left {
+                        canvas.delegate?.canvasSelectionStarted(at: interactionPosition, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    } else if [.right, .middle].contains(canvas.panInteraction!.info.mouseButton) {
+                        canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                    }
                     #endif
                 }
             }
@@ -515,7 +528,15 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             
             #elseif os(macOS)
             
-            canvas.delegate?.canvasSelectionChanged(to: interactionPosition, coordinate: canvas.coordinate)
+            if panInteraction.info.mouseButton == .left {
+                canvas.delegate?.canvasSelectionChanged(to: interactionPosition, coordinate: canvas.coordinate)
+            } else if panInteraction.info.mouseButton == .right {
+                move(panInteraction)
+                transformed()
+            } else if panInteraction.info.mouseButton == .middle {
+                scale(panInteraction)
+                transformed()
+            }
             
             #endif
             
@@ -639,11 +660,23 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             
         }
         
+        #if os(macOS)
+        func scale(_ panInteraction: CCanvasInteraction) {
+            
+            let relativeScale: CGFloat = 1.0 + panInteraction.velocity.dy * middleMouseDragVelocityMultiplier
+            
+            let location: CGPoint = panInteraction.startLocation
+            
+            scaleCanvas(by: relativeScale, at: location)
+            
+        }
+        #endif
+        
         func scaleCanvas(by relativeScale: CGFloat, at location: CGPoint) {
             
             canvas.scale *= relativeScale
 
-            offsetCanvas(by: canvas.scaleOffset(relativeScale: relativeScale, at: location).vector)
+            offsetCanvas(by: canvas.scaleOffset(relativeScale: relativeScale, at: location).asVector)
             
         }
         

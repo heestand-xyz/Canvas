@@ -34,7 +34,7 @@ public class CCanvas: ObservableObject, Codable, Identifiable {
     /// Only used for centering.
     @Published public var size: CGSize = .zero
 
-    public var centerLocation: CGPoint { size.point / 2 }
+    public var centerLocation: CGPoint { size.asPoint / 2 }
     public var centerPosition: CGPoint { coordinate.position(at: centerLocation) }
 
     @Published var interactions: Set<CCanvasInteraction> = []
