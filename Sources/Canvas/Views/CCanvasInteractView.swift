@@ -206,17 +206,13 @@ public class CCanvasInteractView: MPView {
     }
     public override func otherMouseDown(with event: NSEvent) {
         Logger.log()
-        if event.buttonNumber == 2 {
-            /// Middle Mouse Button
+        let isMiddleMouseButton = event.buttonNumber == 2
+        if isMiddleMouseButton {
             guard canvas.interactionEnabled else { return }
             guard let location: CGPoint = getMouseLocation() else { return }
             let id = UUID()
             let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, mouseButton: .middle))
             canvas.interactions.insert(canvasInteraction)
-        } else if event.buttonNumber == 3 {
-            /// Back Mouse Button
-        } else if event.buttonNumber == 4 {
-            /// Forward Mouse Button
         }
     }
     
@@ -235,16 +231,15 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func otherMouseUp(with event: NSEvent) {
-        if event.buttonNumber == 2 {
-            /// Middle Mouse Button
+        let isMiddleMouseButton = event.buttonNumber == 2
+        if isMiddleMouseButton {
             Logger.log()
             guard canvas.interactionEnabled else { return }
             guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
             canvasInteraction.active = false
-        } else if event.buttonNumber == 3 {
-            /// Back Mouse Button
-        } else if event.buttonNumber == 4 {
-            /// Forward Mouse Button
+        } else if let customMouseButton = CCustomMouseButton(rawValue: event.buttonNumber) {
+            guard let location: CGPoint = getMouseLocation() else { return }
+            canvas.delegate?.canvasCustomMouseButtonPress(at: location, with: customMouseButton, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
     }
     
@@ -299,7 +294,10 @@ public class CCanvasInteractView: MPView {
     public override func scrollWheel(with event: NSEvent) {
         guard canvas.trackpadEnabled else { return }
         
-        let delta: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
+        var delta: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
+        if !event.hasPreciseScrollingDeltas {
+            delta *= 10
+        }
         
         if scrollTimer == nil {
             guard max(abs(delta.dx), abs(delta.dy)) > scrollThreshold else { return }

@@ -162,6 +162,9 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             }
             /// Start
             for interaction in filteredPotentialDragInteractions {
+                #if os(macOS)
+                guard interaction.info.mouseButton == .left else { continue }
+                #endif
                 let interactionPosition: CGPoint = canvas.coordinate.position(at: interaction.location)
                 guard let drag: CCanvasDrag = canvas.delegate?.canvasDragHitTest(at: interactionPosition, coordinate: canvas.coordinate) else { continue }
                 guard !canvas.dragInteractions.filter({ $0.interaction.active }).contains(where: { $0.drag.id == drag.id }) else { continue }

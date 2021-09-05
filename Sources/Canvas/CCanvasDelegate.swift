@@ -57,6 +57,7 @@ public protocol CCanvasDelegate: AnyObject {
     
     
     #if os(macOS)
+    
     func canvasSelectionStarted(at position: CGPoint,
                                 info: CCanvasInteractionInfo,
                                 keyboardFlags: Set<CCanvasKeyboardFlag>,
@@ -69,6 +70,13 @@ public protocol CCanvasDelegate: AnyObject {
                               info: CCanvasInteractionInfo,
                               keyboardFlags: Set<CCanvasKeyboardFlag>,
                               coordinate: CCanvasCoordinate)
+    
+    
+    func canvasCustomMouseButtonPress(at position: CGPoint,
+                                      with customMouseButton: CCustomMouseButton,
+                                      keyboardFlags: Set<CCanvasKeyboardFlag>,
+                                      coordinate: CCanvasCoordinate)
+    
     #endif
     
 }
