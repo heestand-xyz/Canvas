@@ -16,7 +16,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
         CCanvasInteractView(canvas: canvas,
                             didMoveCCanvasInteractions: context.coordinator.didMoveCCanvasInteractions(_:),
                             didStartScroll: context.coordinator.didStartScroll,
-                            didScroll: context.coordinator.didScroll(_:),
+                            didScroll: context.coordinator.didScroll(_:withScrollWheel:),
                             didEndScroll: context.coordinator.didEndScroll,
                             didStartMagnify: context.coordinator.didStartMagnify,
                             didMagnify: context.coordinator.didMagnify(_:),
@@ -35,7 +35,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             canvasInteractView.didMoveCCanvasInteractions = context.coordinator.didMoveCCanvasInteractions(_:)
             
             canvasInteractView.didStartScroll = context.coordinator.didStartScroll
-            canvasInteractView.didScroll = context.coordinator.didScroll(_:)
+            canvasInteractView.didScroll = context.coordinator.didScroll(_:withScrollWheel:)
             canvasInteractView.didEndScroll = context.coordinator.didEndScroll
             
             canvasInteractView.didStartMagnify = context.coordinator.didStartMagnify
@@ -317,12 +317,11 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
             let interactionPosition: CGPoint = canvas.coordinate.position(at: mouseLocation)
             canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: true, info: nil, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
-            print("...mouseLocation:", mouseLocation)
         }
         
-        func didScroll(_ velocity: CGVector) {
+        func didScroll(_ velocity: CGVector, withScrollWheel: Bool) {
             guard let mouseLocation: CGPoint = canvas.mouseLocation else { return }
-            if canvas.keyboardFlags.contains(.command) {
+            if canvas.keyboardFlags.contains(.command) || withScrollWheel {
                 let relativeScale: CGFloat = 1.0 + velocity.dy * zoomScrollVelocityMultiplier
                 scaleCanvas(by: relativeScale, at: mouseLocation)
             } else if canvas.keyboardFlags.contains(.option) {
@@ -618,7 +617,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                     let currentOffset: CGPoint = canvas.offset
                     let relativeAngle: Angle = angle - narrowCanvasAngle
                     let newAngle: Angle = currentAngle + relativeAngle
-                    let offset: CGPoint = currentOffset + rotationOffset(relativeAngle: relativeAngle, at: location)
+                    let offset: CGPoint = currentOffset + rotationOffset(relativeAngle: relativeAngle, at: canvas.centerLocation)
                     CCanvasAnimation.animate(for: 0.25, ease: .easeOut) { [weak self] fraction in
                         self?.canvas.offset = currentOffset * (1.0 - fraction) + offset * fraction
                         self?.canvas.angle = currentAngle * Double(1.0 - fraction) + newAngle * Double(fraction)

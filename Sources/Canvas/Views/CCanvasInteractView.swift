@@ -9,7 +9,7 @@ public class CCanvasInteractView: MPView {
     var didMoveCCanvasInteractions: (Set<CCanvasInteraction>) -> ()
     
     var didStartScroll: () -> ()
-    var didScroll: (CGVector) -> ()
+    var didScroll: (CGVector, Bool) -> ()
     var didEndScroll: () -> ()
     
     var didStartMagnify: () -> ()
@@ -30,7 +30,7 @@ public class CCanvasInteractView: MPView {
     init(canvas: CCanvas,
          didMoveCCanvasInteractions: @escaping (Set<CCanvasInteraction>) -> (),
          didStartScroll: @escaping () -> (),
-         didScroll: @escaping (CGVector) -> (),
+         didScroll: @escaping (CGVector, Bool) -> (),
          didEndScroll: @escaping () -> (),
          didStartMagnify: @escaping () -> (),
          didMagnify: @escaping (CGFloat) -> (),
@@ -296,7 +296,8 @@ public class CCanvasInteractView: MPView {
         guard canvas.trackpadEnabled else { return }
         
         var delta: CGVector = CGVector(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
-        if !event.hasPreciseScrollingDeltas {
+        let withScrollWheel: Bool = !event.hasPreciseScrollingDeltas
+        if withScrollWheel {
             delta *= middleMouseScrollVelocityMultiplier
         }
         
@@ -305,7 +306,7 @@ public class CCanvasInteractView: MPView {
             didStartScroll()
         }
         
-        didScroll(delta)
+        didScroll(delta, withScrollWheel)
         
         scrollTimer?.invalidate()
         scrollTimer = Timer(timeInterval: scrollTimeout, repeats: false, block: { [weak self] _ in
