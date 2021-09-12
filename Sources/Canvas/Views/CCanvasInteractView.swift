@@ -385,6 +385,7 @@ public protocol NodeContextActions {
     func contextFullscreen()
     func contextSaveImage()
     func contextSaveImageInCircle()
+    func contextBypass()
 }
 
 extension CCanvasInteractView: NodeContextActions {
@@ -417,6 +418,10 @@ extension CCanvasInteractView: NodeContextActions {
     
     @objc public func contextSaveImageInCircle() {
         CCanvasInteractView.nodeContextActions?.contextSaveImageInCircle()
+    }
+    
+    @objc public func contextBypass() {
+        CCanvasInteractView.nodeContextActions?.contextBypass()
     }
 }
 
