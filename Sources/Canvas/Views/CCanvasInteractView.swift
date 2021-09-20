@@ -381,7 +381,7 @@ public protocol NodeContextActions {
     func contextCopy()
     func contextDuplicate()
     func contextRemove()
-    func contextFillView()
+    func contextFullarea()
     func contextFullscreen()
     func contextSaveImage()
     func contextSaveImageInCircle()
@@ -405,8 +405,8 @@ extension CCanvasInteractView: NodeContextActions {
         CCanvasInteractView.nodeContextActions?.contextRemove()
     }
     
-    @objc public func contextFillView() {
-        CCanvasInteractView.nodeContextActions?.contextFillView()
+    @objc public func contextFullarea() {
+        CCanvasInteractView.nodeContextActions?.contextFullarea()
     }
     
     @objc public func contextFullscreen() {
