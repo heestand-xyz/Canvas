@@ -71,7 +71,7 @@ public struct CanvasGrid: View {
     
 }
 
-struct CanvasGrid_Previews: SwiftUI.PreviewProvider {
+struct CanvasGrid_Previews: PreviewProvider {
     static var previews: some View {
         CanvasGrid(size: 100, canvasCoordinate: .zero)
     }
