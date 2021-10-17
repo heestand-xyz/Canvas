@@ -62,7 +62,7 @@ public class CCanvasInteractView: MPView {
         
         #if os(macOS)
         NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] in
-            Logger.log(message: "Monitor - Flags Changed")
+            Logger.log(message: "Monitor - Flags Changed", frequency: .verbose)
             self?.flagsChanged(with: $0)
             return $0
         }
@@ -71,7 +71,7 @@ public class CCanvasInteractView: MPView {
 //            return $0
 //        }
 //        NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] in
-//            Logger.log(message: "Monitor - Left Mouse Down")
+//            Logger.log(message: "Monitor - Left Mouse Down", frequency: .verbose)
 //            self?.mouseDown(with: $0)
 //            return $0
 //        }
@@ -84,7 +84,7 @@ public class CCanvasInteractView: MPView {
 //            return $0
 //        }
         NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { [weak self] in
-            Logger.log(message: "Monitor - Left Mouse Up")
+            Logger.log(message: "Monitor - Left Mouse Up", frequency: .verbose)
             self?.mouseUp(with: $0)
             return $0
         }
@@ -133,7 +133,7 @@ public class CCanvasInteractView: MPView {
     // MARK: - Touch
     
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        Logger.log()
+        Logger.log(frequency: .verbose)
         guard canvas.interactionEnabled else { return }
         for touch in touches {
             let id = UUID()
@@ -163,7 +163,7 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        Logger.log()
+        Logger.log(frequency: .verbose)
         guard canvas.interactionEnabled else { return }
         for touch in touches {
             guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
@@ -174,7 +174,7 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        Logger.log()
+        Logger.log(frequency: .verbose)
         guard canvas.interactionEnabled else { return }
         for touch in touches {
             guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first(where: { canvasInteraction in
@@ -189,7 +189,7 @@ public class CCanvasInteractView: MPView {
     // MARK: - Mouse
     
     public override func mouseDown(with event: NSEvent) {
-        Logger.log()
+        Logger.log(frequency: .verbose)
         guard canvas.interactionEnabled else { return }
         guard let location: CGPoint = getMouseLocation() else { return }
         let id = UUID()
@@ -198,7 +198,7 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func rightMouseDown(with event: NSEvent) {
-        Logger.log()
+        Logger.log(frequency: .verbose)
         guard canvas.interactionEnabled else { return }
         guard let location: CGPoint = getMouseLocation() else { return }
         let id = UUID()
@@ -206,7 +206,7 @@ public class CCanvasInteractView: MPView {
         canvas.interactions.insert(canvasInteraction)
     }
     public override func otherMouseDown(with event: NSEvent) {
-        Logger.log()
+        Logger.log(frequency: .verbose)
         let isMiddleMouseButton = event.buttonNumber == 2
         if isMiddleMouseButton {
             guard canvas.interactionEnabled else { return }
@@ -218,14 +218,14 @@ public class CCanvasInteractView: MPView {
     }
     
     public override func mouseUp(with event: NSEvent) {
-        Logger.log()
+        Logger.log(frequency: .verbose)
         guard canvas.interactionEnabled else { return }
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
     }
     
     public override func rightMouseUp(with event: NSEvent) {
-        Logger.log()
+        Logger.log(frequency: .verbose)
         guard canvas.interactionEnabled else { return }
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
@@ -234,7 +234,7 @@ public class CCanvasInteractView: MPView {
     public override func otherMouseUp(with event: NSEvent) {
         let isMiddleMouseButton = event.buttonNumber == 2
         if isMiddleMouseButton {
-            Logger.log()
+            Logger.log(frequency: .verbose)
             guard canvas.interactionEnabled else { return }
             guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
             canvasInteraction.active = false
