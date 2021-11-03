@@ -434,6 +434,7 @@ public protocol AreaContextActions {
     func contextPaseNodes()
     func contextZoomToCircle()
     func contextZoomToNodes()
+    func contextRenderAll()
 }
 
 extension CCanvasInteractView: AreaContextActions {
@@ -450,6 +451,10 @@ extension CCanvasInteractView: AreaContextActions {
     
     @objc public func contextZoomToNodes() {
         CCanvasInteractView.areaContextActions?.contextZoomToNodes()
+    }
+    
+    @objc public func contextRenderAll() {
+        CCanvasInteractView.areaContextActions?.contextRenderAll()
     }
 }
 
