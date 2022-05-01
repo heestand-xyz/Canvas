@@ -2,7 +2,7 @@ import CoreGraphics
 import CoreGraphicsExtensions
 import SwiftUI
 
-public struct CCanvasCoordinate: Codable {
+public struct CCanvasCoordinate: Codable, Equatable {
     public var offset: CGPoint
     public var scale: CGFloat
     public var angle: Angle
