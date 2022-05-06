@@ -2,7 +2,7 @@ import CoreGraphics
 import CoreGraphicsExtensions
 import SwiftUI
 
-public struct CCanvasCoordinate: Codable, Equatable {
+public struct CCanvasCoordinate: Equatable {
     public var offset: CGPoint
     public var scale: CGFloat
     public var angle: Angle
@@ -10,6 +10,30 @@ public struct CCanvasCoordinate: Codable, Equatable {
         self.offset = offset
         self.scale = scale
         self.angle = angle
+    }
+}
+
+extension CCanvasCoordinate: Codable {
+    
+    enum CodingKeys: CodingKey {
+        case offset
+        case scale
+        case angle
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        offset = try container.decode(CGPoint.self, forKey: .offset)
+        scale = try container.decode(CGFloat.self, forKey: .scale)
+        let degrees: Double = try container.decode(Double.self, forKey: .angle)
+        angle = .degrees(degrees)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(offset, forKey: .offset)
+        try container.encode(scale, forKey: .scale)
+        try container.encode(angle.degrees, forKey: .angle)
     }
 }
 
