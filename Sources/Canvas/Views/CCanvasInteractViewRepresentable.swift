@@ -75,7 +75,15 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             displayLink.listen(frameLoop: frameLoop)
         }
         
+//        var frameLoopIndex: Int = 0
+        
         func frameLoop() {
+            
+//            frameLoopIndex += 1
+//
+//            #if DEBUG
+//            guard frameLoopIndex % 30 == 0 else { return }
+//            #endif
             
             func endDrag(of interaction: CCanvasInteraction) {
                 if let dragInteraction: CCanvasDragInteraction = canvas.dragInteractions.first(where: { dragInteraction in
