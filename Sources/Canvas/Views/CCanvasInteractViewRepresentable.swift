@@ -410,7 +410,6 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                 let snapPack: (CGPoint, CGVector) = predictSnapPack(dragInteraction: dragInteraction)
                 interaction.predictedEndLocation = snapPack.0
                 interaction.velocity = snapPack.1
-                
             }
             
             guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag, coordinate: canvas.coordinate) else { return }
