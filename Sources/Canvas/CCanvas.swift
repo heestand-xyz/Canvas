@@ -194,3 +194,8 @@ public extension CCanvas {
         move(to: fitCoordinate(in: frame, padding: padding), animatedDuration: animated ? 0.25 : nil)
     }
 }
+
+extension CCanvas {
+    
+    public static let mock = CCanvas(physics: false, snapGridToAngle: nil)
+}
