@@ -20,24 +20,38 @@ public class CCanvas: ObservableObject, Identifiable {
     public var secondaryWindow: NSWindow?
     #endif
     
-    @Published public var offset: CGPoint = .zero
-    @Published public var scale: CGFloat = 1.0
-    @Published public var angle: Angle = .zero
-    public var coordinate: CCanvasCoordinate {
-        get {
-            CCanvasCoordinate(offset: offset, scale: scale, angle: angle)
-        }
-        set {
-            offset = newValue.offset
-            scale = newValue.scale
-            angle = newValue.angle
-        }
+    @Published public var coordinate: CCanvasCoordinate = .zero
+    public var offset: CGPoint {
+        get { coordinate.offset }
+        set { coordinate.offset = newValue }
+    }
+    public var scale: CGFloat {
+        get { coordinate.scale }
+        set { coordinate.scale = newValue }
+    }
+    public var angle: Angle {
+        get { coordinate.angle }
+        set { coordinate.angle = newValue }
     }
     
+//    @Published public var offset: CGPoint = .zero
+//    @Published public var scale: CGFloat = 1.0
+//    @Published public var angle: Angle = .zero
+//    public var coordinate: CCanvasCoordinate {
+//        get {
+//            CCanvasCoordinate(offset: offset, scale: scale, angle: angle)
+//        }
+//        set {
+//            offset = newValue.offset
+//            scale = newValue.scale
+//            angle = newValue.angle
+//        }
+//    }
+    
     /// Only used for centering.
-    @Published public var size: CGSize = .zero
+    @Published public var size: CGSize?
 
-    public var centerLocation: CGPoint { size.asPoint / 2 }
+    public var centerLocation: CGPoint { (size ?? .zero).asPoint / 2 }
     public var centerPosition: CGPoint { coordinate.position(at: centerLocation) }
 
     @Published var interactions: Set<CCanvasInteraction> = []
@@ -157,7 +171,7 @@ public extension CCanvas {
 public extension CCanvas {
     
     var originCoordinate: CCanvasCoordinate {
-        CCanvasCoordinate(offset: size.asPoint / 2, scale: 1.0, angle: .zero)
+        CCanvasCoordinate(offset: (size ?? .zero).asPoint / 2, scale: 1.0, angle: .zero)
     }
     
     func resetToOrigin(animated: Bool = false) {
@@ -174,14 +188,14 @@ public extension CCanvas {
         
         guard size != .zero else { return .zero }
         
-        let targetScale: CGFloat = min(size.width / frame.width,
-                                       size.height / frame.height)
+        let targetScale: CGFloat = min((size?.width ?? 0.0) / frame.width,
+                                       (size?.height ?? 0.0) / frame.height)
         let targetFrame: CGRect = CGRect(origin: frame.origin - padding * targetScale,
                                          size: frame.size + (padding * 2) * targetScale)
 
-        let fitScale: CGFloat = min(size.width / targetFrame.width,
-                                    size.height / targetFrame.height)
-        let fitOffset: CGPoint = size / 2 - targetFrame.center * fitScale
+        let fitScale: CGFloat = min((size?.width ?? 0.0) / targetFrame.width,
+                                     (size?.height ?? 0.0) / targetFrame.height)
+        let fitOffset: CGPoint = (size ?? .zero) / 2 - targetFrame.center * fitScale
         let fitAngle: Angle = .zero
         let fitCoordinate = CCanvasCoordinate(offset: fitOffset,
                                              scale: fitScale,
