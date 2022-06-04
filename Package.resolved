@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/heestand-xyz/CoreGraphicsExtensions",
         "state": {
           "branch": null,
-          "revision": "89b30426f001988a878905d9cdcec0647dc17281",
-          "version": "1.3.1"
+          "revision": "3e6f28cf2bbc7fca9933fd4addd60d21a00c83b7",
+          "version": "1.3.2"
         }
       },
       {
@@ -24,8 +24,8 @@
         "repositoryURL": "https://github.com/heestand-xyz/Logger",
         "state": {
           "branch": null,
-          "revision": "2e6f1a07852a0107f9d63d042d41a7a108ad0b7f",
-          "version": "0.2.1"
+          "revision": "54d277ba6c4d1b843b438c628f8e11d8f7ea8a51",
+          "version": "0.3.0"
         }
       },
       {
