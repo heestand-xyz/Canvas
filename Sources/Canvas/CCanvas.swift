@@ -131,7 +131,7 @@ public extension CCanvas {
         let currentScale: CGFloat = self.scale
         let currentAngle: Angle = self.angle
         if let duration: CGFloat = animatedDuration {
-            CCanvasAnimation.animate(for: duration, ease: .easeInOut) { [weak self] fraction in
+            CCanvasAnimation.animate(duration: duration, ease: .easeInOut) { [weak self] fraction in
                 self?.offset = currentOffset * (1.0 - fraction) + coordinate.offset * fraction
                 self?.scale = currentScale * (1.0 - fraction) + coordinate.scale * fraction
                 self?.angle = Angle(degrees: currentAngle.degrees * Double(1.0 - fraction) + coordinate.angle.degrees * Double(fraction))

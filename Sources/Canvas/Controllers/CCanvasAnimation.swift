@@ -13,18 +13,22 @@ public struct CCanvasAnimation {
         case easeOut
     }
     
-    public static func animate(for duration: CGFloat, ease: AnimationEase = .linear, loop: @escaping (CGFloat) -> (), done: (() -> ())? = nil) {
-        animate(for: duration, ease: ease) { fraction, _ in
+    public static func animate(duration: CGFloat, ease: AnimationEase = .linear, loop: @escaping (CGFloat) -> (), done: (() -> ())? = nil) {
+        animateRelative(duration: duration, ease: ease) { fraction, _ in
             loop(fraction)
         } done: {
             done?()
         }
     }
     
-    public static func animate(for duration: CGFloat, ease: AnimationEase = .linear, loop: @escaping (CGFloat, CGFloat) -> (), done: (() -> ())? = nil) {
+    public static func animateRelative(duration: CGFloat, ease: AnimationEase = .linear, loop: @escaping (CGFloat, CGFloat) -> (), done: (() -> ())? = nil) {
         let startTime = Date()
         #if os(macOS)
-        let fps: Int = 60
+        let fps: Int = {
+            let id = CGMainDisplayID()
+            guard let mode = CGDisplayCopyDisplayMode(id) else { return 60 }
+            return Int(mode.refreshRate)
+        }()
         #else
         let fps: Int = UIScreen.main.maximumFramesPerSecond
         #endif
@@ -52,5 +56,4 @@ public struct CCanvasAnimation {
             }
         }), forMode: .common)
     }
-    
 }

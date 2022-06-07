@@ -510,7 +510,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag, coordinate: canvas.coordinate) else { return }
             let snapPosition: CGPoint = CCanvas.snapToGrid(position: position, snapGrid: snapGrid)
             
-            CCanvasAnimation.animate(for: 0.25, ease: .easeOut) { [weak self] fraction in
+            CCanvasAnimation.animate(duration: 0.25, ease: .easeOut) { [weak self] fraction in
                 
                 guard let coordinate: CCanvasCoordinate = self?.canvas.coordinate else { return }
                 let animatedPosition: CGPoint = position * (1.0 - fraction) + snapPosition * fraction
@@ -569,7 +569,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                 pinchInteraction.0.initialRotation = initialRotation
                 if abs(initialRotation.degrees) > initialRotationThreshold.degrees {
                     pinchInteraction.0.initialRotationThresholdReached = true
-                    CCanvasAnimation.animate(for: 0.25, ease: .easeInOut) { [weak self] fraction, relativeFraction in
+                    CCanvasAnimation.animateRelative(duration: 0.25, ease: .easeInOut) { [weak self] fraction, relativeFraction in
                         self?.rotate(relativeAngle: Angle(degrees: initialRotation.degrees * Double(relativeFraction)), pinchInteraction)
                     }
                     return true
@@ -625,7 +625,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                     let relativeAngle: Angle = angle - narrowCanvasAngle
                     let newAngle: Angle = currentAngle + relativeAngle
                     let offset: CGPoint = currentOffset + rotationOffset(relativeAngle: relativeAngle, at: canvas.centerLocation)
-                    CCanvasAnimation.animate(for: 0.25, ease: .easeOut) { [weak self] fraction in
+                    CCanvasAnimation.animate(duration: 0.25, ease: .easeOut) { [weak self] fraction in
                         self?.canvas.offset = currentOffset * (1.0 - fraction) + offset * fraction
                         self?.canvas.angle = currentAngle * Double(1.0 - fraction) + newAngle * Double(fraction)
                     } done: {}
