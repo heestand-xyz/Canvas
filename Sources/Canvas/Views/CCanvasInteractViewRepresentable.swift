@@ -415,7 +415,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag, coordinate: canvas.coordinate) else { return }
             
             if interaction.contentCenterOffset == nil {
-                interaction.contentCenterOffset = (canvas.coordinate.position(at: interaction.location) - position).vector
+                interaction.contentCenterOffset = (canvas.coordinate.position(at: interaction.location) - position).asVector
             }
             
             let offset: CGVector = canvas.coordinate.scaleRotate(interaction.velocity)
@@ -724,7 +724,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             
             canvas.angle += relativeAngle
             
-            offsetCanvas(by: rotationOffset(relativeAngle: relativeAngle, at: location).vector)
+            offsetCanvas(by: rotationOffset(relativeAngle: relativeAngle, at: location).asVector)
             
         }
         

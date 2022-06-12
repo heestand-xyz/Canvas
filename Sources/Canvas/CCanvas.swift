@@ -12,8 +12,8 @@ public class CCanvas: ObservableObject, Identifiable {
     var physics: Bool = iOS
     let snapGridToAngle: Angle?
     
-    #warning("Window can't be strong, it will not deallocate.")
-    #warning("Window can't be weak, it will crash on second window close.")
+    // FIXME: Window can't be strong, it will not deallocate.
+    // FIXME: Window can't be weak, it will crash on second window close.
     #if os(macOS)
     public var window: NSWindow? { primaryWindow ?? secondaryWindow }
     public weak var primaryWindow: NSWindow?

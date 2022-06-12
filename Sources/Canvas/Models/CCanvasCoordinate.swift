@@ -65,10 +65,10 @@ public extension CCanvasCoordinate {
     /// Converts from screen space to content space
     func absolute(frame: CGRect) -> (topLeft: CGPoint, bottomLeft: CGPoint, topRight: CGPoint, bottomRight: CGPoint) {
         (
-            topLeft: absolute(location: CGPoint(x: frame.minX, y: frame.minY)),
-            bottomLeft: absolute(location: CGPoint(x: frame.minX, y: frame.maxY)),
-            topRight: absolute(location: CGPoint(x: frame.maxX, y: frame.minY)),
-            bottomRight: absolute(location: CGPoint(x: frame.maxX, y: frame.maxY))
+            topLeft: position(at: CGPoint(x: frame.minX, y: frame.minY)),
+            bottomLeft: position(at: CGPoint(x: frame.minX, y: frame.maxY)),
+            topRight: position(at: CGPoint(x: frame.maxX, y: frame.minY)),
+            bottomRight: position(at: CGPoint(x: frame.maxX, y: frame.maxY))
         )
     }
     
@@ -82,7 +82,7 @@ public extension CCanvasCoordinate {
     }
     
     func scaleRotate(_ vector: CGVector) -> CGVector {
-        (CCanvasCoordinate.rotate(vector.point, by: -angle) / scale).vector
+        (CCanvasCoordinate.rotate(vector.asPoint, by: -angle) / scale).asVector
     }
 }
 
