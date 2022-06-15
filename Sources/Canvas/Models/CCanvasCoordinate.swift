@@ -106,6 +106,18 @@ public extension CCanvasCoordinate {
     }
 }
 
+extension CCanvasCoordinate {
+    
+    public static func lerp(from leadingCoordinate: CCanvasCoordinate,
+                            to trailingCoordinate: CCanvasCoordinate,
+                            at fraction: CGFloat) -> CCanvasCoordinate {
+        
+        CCanvasCoordinate(offset: leadingCoordinate.offset * (1.0 - fraction) + trailingCoordinate.offset * fraction,
+                          scale: leadingCoordinate.scale * (1.0 - fraction) + trailingCoordinate.scale * fraction,
+                          angle: Angle(radians: leadingCoordinate.angle.radians * (1.0 - fraction) + trailingCoordinate.angle.radians * fraction))
+    }
+}
+
 public extension CCanvasCoordinate {
     static let zero: CCanvasCoordinate = CCanvasCoordinate(offset: .zero, scale: 1.0, angle: .zero)
 }

@@ -559,29 +559,40 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             
             guard let pinchInteraction: (CCanvasInteraction, CCanvasInteraction) = canvas.pinchInteraction else { return }
             
-            move(pinchInteraction)
-            
+            if !canvas.magnifyInPlace {
+                
+                move(pinchInteraction)
+            }
+                
             scale(pinchInteraction)
             
-            if pinchInteraction.0.initialRotationThresholdReached || {
-                let relativeAngle: Angle = relativeRotation(pinchInteraction)
-                let initialRotation: Angle = pinchInteraction.0.initialRotation + relativeAngle
-                pinchInteraction.0.initialRotation = initialRotation
-                if abs(initialRotation.degrees) > initialRotationThreshold.degrees {
-                    pinchInteraction.0.initialRotationThresholdReached = true
-                    CCanvasAnimation.animateRelative(duration: 0.25, ease: .easeInOut) { [weak self] fraction, relativeFraction in
-                        self?.rotate(relativeAngle: Angle(degrees: initialRotation.degrees * Double(relativeFraction)), pinchInteraction)
+            if !canvas.magnifyInPlace {
+                
+                if pinchInteraction.0.initialRotationThresholdReached || {
+                    let relativeAngle: Angle = relativeRotation(pinchInteraction)
+                    let initialRotation: Angle = pinchInteraction.0.initialRotation + relativeAngle
+                    pinchInteraction.0.initialRotation = initialRotation
+                    if abs(initialRotation.degrees) > initialRotationThreshold.degrees {
+                        pinchInteraction.0.initialRotationThresholdReached = true
+                        CCanvasAnimation.animateRelative(duration: 0.25, ease: .easeInOut) { [weak self] fraction, relativeFraction in
+                            self?.rotate(relativeAngle: Angle(degrees: initialRotation.degrees * Double(relativeFraction)), pinchInteraction)
+                        }
+                        return true
                     }
-                    return true
+                    return false
+                }() {
+                    rotate(pinchInteraction)
                 }
-                return false
-            }() {
-                rotate(pinchInteraction)
+                
+                transformed()
             }
             
-            transformed()
-            
-            let interactionPosition: CGPoint = canvas.coordinate.position(at: (pinchInteraction.0.location + pinchInteraction.1.location) / 2)
+            let interactionPosition: CGPoint
+            if canvas.magnifyInPlace {
+                interactionPosition = canvas.coordinate.position(at: (pinchInteraction.0.startLocation + pinchInteraction.1.startLocation) / 2)
+            } else {
+                interactionPosition = canvas.coordinate.position(at: (pinchInteraction.0.location + pinchInteraction.1.location) / 2)                
+            }
             canvas.delegate?.canvasMoveUpdated(at: interactionPosition, viaScroll: false, info: pinchInteraction.0.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
             
         }
@@ -685,8 +696,9 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             
             canvas.scale *= relativeScale
 
-            offsetCanvas(by: canvas.scaleOffset(relativeScale: relativeScale, at: location).asVector)
-            
+            if !canvas.magnifyInPlace {
+                offsetCanvas(by: canvas.scaleOffset(relativeScale: relativeScale, at: location).asVector)
+            }
         }
         
         func relativeRotation(_ pinchInteraction: (CCanvasInteraction, CCanvasInteraction)) -> Angle {

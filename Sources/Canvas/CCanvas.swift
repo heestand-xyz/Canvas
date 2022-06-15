@@ -64,11 +64,13 @@ public class CCanvas: ObservableObject, Identifiable {
     
     public var interactionEnabled: Bool = true
     public var trackpadEnabled: Bool = true
+    public var magnifyInPlace: Bool = false
 
-    public init(physics: Bool = iOS, snapGridToAngle: Angle? = nil) {
+    public init(physics: Bool = iOS, snapGridToAngle: Angle? = nil, magnifyInPlace: Bool = false) {
         self.id = UUID()
         self.physics = physics
         self.snapGridToAngle = snapGridToAngle
+        self.magnifyInPlace = magnifyInPlace
     }
 }
 
