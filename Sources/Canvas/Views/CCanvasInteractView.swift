@@ -98,6 +98,7 @@ public class CCanvasInteractView: MPView {
         }
         #endif
         
+        becomeFirstResponder()
     }
     
     required init?(coder: NSCoder) {
@@ -181,6 +182,66 @@ public class CCanvasInteractView: MPView {
                 canvasInteraction.touch == touch
             }) else { continue }
             canvasInteraction.active = false
+        }
+    }
+    
+    public override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        
+        var didHandleEvent = false
+        
+        for press in presses {
+            guard let key = press.key else { continue }
+            guard key.charactersIgnoringModifiers == "" else { continue }
+            if key.modifierFlags.contains(.command) {
+                canvas.keyboardFlags.insert(.command)
+                didHandleEvent = true
+            }
+            if key.modifierFlags.contains(.control) {
+                canvas.keyboardFlags.insert(.control)
+                didHandleEvent = true
+            }
+            if key.modifierFlags.contains(.shift) {
+                canvas.keyboardFlags.insert(.shift)
+                didHandleEvent = true
+            }
+            if key.modifierFlags.contains(.alternate) {
+                canvas.keyboardFlags.insert(.option)
+                didHandleEvent = true
+            }
+        }
+        
+        if didHandleEvent == false {
+            super.pressesBegan(presses, with: event)
+        }
+    }
+    
+    public override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        
+        var didHandleEvent = false
+        
+        for press in presses {
+            guard let key = press.key else { continue }
+            guard key.charactersIgnoringModifiers == "" else { continue }
+            if key.modifierFlags.contains(.command) {
+                canvas.keyboardFlags.remove(.command)
+                didHandleEvent = true
+            }
+            if key.modifierFlags.contains(.control) {
+                canvas.keyboardFlags.remove(.control)
+                didHandleEvent = true
+            }
+            if key.modifierFlags.contains(.shift) {
+                canvas.keyboardFlags.remove(.shift)
+                didHandleEvent = true
+            }
+            if key.modifierFlags.contains(.alternate) {
+                canvas.keyboardFlags.remove(.option)
+                didHandleEvent = true
+            }
+        }
+        
+        if didHandleEvent == false {
+            super.pressesEnded(presses, with: event)
         }
     }
     
