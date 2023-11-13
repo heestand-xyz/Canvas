@@ -577,20 +577,23 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             
             if !canvas.magnifyInPlace {
                 
-                if pinchInteraction.0.initialRotationThresholdReached || {
-                    let relativeAngle: Angle = relativeRotation(pinchInteraction)
-                    let initialRotation: Angle = pinchInteraction.0.initialRotation + relativeAngle
-                    pinchInteraction.0.initialRotation = initialRotation
-                    if abs(initialRotation.degrees) > initialRotationThreshold.degrees {
-                        pinchInteraction.0.initialRotationThresholdReached = true
-                        CCanvasAnimation.animateRelative(duration: 0.25, ease: .easeInOut) { [weak self] fraction, relativeFraction in
-                            self?.rotate(relativeAngle: Angle(degrees: initialRotation.degrees * Double(relativeFraction)), pinchInteraction)
+                if canvas.rotationEnabled {
+                    
+                    if pinchInteraction.0.initialRotationThresholdReached || {
+                        let relativeAngle: Angle = relativeRotation(pinchInteraction)
+                        let initialRotation: Angle = pinchInteraction.0.initialRotation + relativeAngle
+                        pinchInteraction.0.initialRotation = initialRotation
+                        if abs(initialRotation.degrees) > initialRotationThreshold.degrees {
+                            pinchInteraction.0.initialRotationThresholdReached = true
+                            CCanvasAnimation.animateRelative(duration: 0.25, ease: .easeInOut) { [weak self] fraction, relativeFraction in
+                                self?.rotate(relativeAngle: Angle(degrees: initialRotation.degrees * Double(relativeFraction)), pinchInteraction)
+                            }
+                            return true
                         }
-                        return true
+                        return false
+                    }() {
+                        rotate(pinchInteraction)
                     }
-                    return false
-                }() {
-                    rotate(pinchInteraction)
                 }
                 
                 transformed()
