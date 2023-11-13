@@ -1,6 +1,6 @@
 import Foundation
 import CoreGraphics
-#if os(iOS)
+#if !os(macOS)
 import UIKit
 #endif
 import SwiftUI
@@ -50,7 +50,7 @@ class CCanvasInteraction: Identifiable {
     var active: Bool
     var auto: Bool
 
-    #if os(iOS)
+    #if !os(macOS)
     var touch: UITouch?
     #endif
     

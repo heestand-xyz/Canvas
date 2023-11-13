@@ -56,7 +56,7 @@ public class CCanvasInteractView: MPView {
 
         super.init(frame: .zero)
         
-        #if os(iOS)
+        #if !os(macOS)
         isMultipleTouchEnabled = true
         #endif
         
@@ -117,19 +117,19 @@ public class CCanvasInteractView: MPView {
     }
     #endif
     
-    #if os(iOS)
+    #if !os(macOS)
     public override var canBecomeFirstResponder: Bool { true }
     public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         action.description.contains("context")
     }
-    #elseif os(macOS)
+    #else
     public var canBecomeFirstResponder: Bool { true }
     public func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         action.description.contains("context")
     }
     #endif
     
-    #if os(iOS)
+    #if !os(macOS)
     
     // MARK: - Touch
     
@@ -245,7 +245,7 @@ public class CCanvasInteractView: MPView {
         }
     }
     
-    #elseif os(macOS)
+    #else
     
     // MARK: - Mouse
     

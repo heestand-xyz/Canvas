@@ -1,34 +1,32 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "DisplayLink",
-        "repositoryURL": "https://github.com/heestand-xyz/DisplayLink",
-        "state": {
-          "branch": null,
-          "revision": "c954713d46055625e324f23fa50b5cc3c7f56486",
-          "version": "1.0.2"
-        }
-      },
-      {
-        "package": "Logger",
-        "repositoryURL": "https://github.com/heestand-xyz/Logger",
-        "state": {
-          "branch": null,
-          "revision": "2e6f1a07852a0107f9d63d042d41a7a108ad0b7f",
-          "version": "0.2.1"
-        }
-      },
-      {
-        "package": "swift-collections",
-        "repositoryURL": "https://github.com/apple/swift-collections",
-        "state": {
-          "branch": null,
-          "revision": "48254824bb4248676bf7ce56014ff57b142b77eb",
-          "version": "1.0.2"
-        }
+  "pins" : [
+    {
+      "identity" : "displaylink",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/heestand-xyz/DisplayLink",
+      "state" : {
+        "revision" : "0ef682f0221b126a23047080c123d86a3ceb12eb",
+        "version" : "1.1.0"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "logger",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/heestand-xyz/Logger",
+      "state" : {
+        "revision" : "8553f58e72b83598acc28d4ea93b1dc992c71067",
+        "version" : "0.3.1"
+      }
+    },
+    {
+      "identity" : "swift-collections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-collections",
+      "state" : {
+        "revision" : "48254824bb4248676bf7ce56014ff57b142b77eb",
+        "version" : "1.0.2"
+      }
+    }
+  ],
+  "version" : 2
 }

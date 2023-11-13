@@ -1,6 +1,6 @@
 import Foundation
 import CoreGraphics
-#if os(iOS)
+#if !os(macOS)
 import UIKit
 #endif
 
@@ -29,8 +29,10 @@ public struct CCanvasAnimation {
             guard let mode = CGDisplayCopyDisplayMode(id) else { return 60 }
             return Int(mode.refreshRate)
         }()
-        #else
+        #elseif os(iOS)
         let fps: Int = UIScreen.main.maximumFramesPerSecond
+        #elseif os(visionOS)
+        let fps: Int = 90
         #endif
         loop(0.0, 0.0)
         var lastFraction: CGFloat = 0.0

@@ -47,7 +47,7 @@ public struct CanvasPolyGrid: View {
     func grid(at superScale: CGFloat = 1.0, lineWidth: CGFloat = .onePixel, extraScale: CGFloat = 2.0) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .topLeading) {
-                ForEach(0..<count) { i in
+                ForEach(Array(0..<count), id: \.self) { i in
                     ForEach(-count(size: geo.size, at: superScale, extraScale: extraScale)...count(size: geo.size, at: superScale, extraScale: extraScale), id: \.self) { y in
                         Rectangle()
                             .frame(height: lineWidth)
