@@ -66,23 +66,6 @@ public class CCanvasInteractView: MPView {
             self?.flagsChanged(with: $0)
             return $0
         }
-//        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] in
-//            self?.mouseMoved(with: $0)
-//            return $0
-//        }
-//        NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] in
-//            Logger.log(message: "Monitor - Left Mouse Down", frequency: .verbose)
-//            self?.mouseDown(with: $0)
-//            return $0
-//        }
-//        NSEvent.addLocalMonitorForEvents(matching: .leftMouseDragged) { [weak self] in
-//            self?.mouseDragged(with: $0)
-//            return $0
-//        }
-//        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] in
-//            self?.mouseMoved(with: $0)
-//            return $0
-//        }
         NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { [weak self] in
             Logger.log(message: "Monitor - Left Mouse Up", frequency: .verbose)
             self?.mouseUp(with: $0)
