@@ -3,6 +3,7 @@ import SwiftUI
 import CoreGraphicsExtensions
 import MultiViews
 
+@MainActor
 public class CCanvas: ObservableObject, Identifiable {
     
     public weak var delegate: CCanvasDelegate?
@@ -15,7 +16,9 @@ public class CCanvas: ObservableObject, Identifiable {
     // FIXME: Window can't be strong, it will not deallocate.
     // FIXME: Window can't be weak, it will crash on second window close.
     #if os(macOS)
-    public var window: NSWindow? { primaryWindow ?? secondaryWindow }
+    public var window: NSWindow? {
+        useCustomWindow ? (primaryWindow ?? secondaryWindow) : NSApp.mainWindow
+    }
     public weak var primaryWindow: NSWindow?
     public var secondaryWindow: NSWindow?
     #endif
@@ -64,12 +67,18 @@ public class CCanvas: ObservableObject, Identifiable {
     
     public var interactionEnabled: Bool = true
     public var trackpadEnabled: Bool = true
-    public var magnifyInPlace: Bool = false
+    public var rotationEnabled: Bool
+    public var magnifyInPlace: Bool
 
-    public init(physics: Bool = iOS, snapGridToAngle: Angle? = nil, magnifyInPlace: Bool = false) {
+#if os(macOS)
+    public var useCustomWindow: Bool = false
+#endif
+    
+    public init(physics: Bool = iOS, rotate: Bool = false, snapGridToAngle: Angle? = nil, magnifyInPlace: Bool = false) {
         self.id = UUID()
         self.physics = physics
         self.snapGridToAngle = snapGridToAngle
+        self.rotationEnabled = rotate
         self.magnifyInPlace = magnifyInPlace
     }
 }

@@ -6,7 +6,7 @@ import Logger
 public class CCanvasInteractView: MPView {
     
     var canvas: CCanvas
-    var didMoveCCanvasInteractions: (Set<CCanvasInteraction>) -> ()
+    var didMoveInteractions: (Set<CCanvasInteraction>) -> ()
     
     var didStartScroll: () -> ()
     var didScroll: (CGVector, Bool) -> ()
@@ -28,7 +28,7 @@ public class CCanvasInteractView: MPView {
     #endif
 
     init(canvas: CCanvas,
-         didMoveCCanvasInteractions: @escaping (Set<CCanvasInteraction>) -> (),
+         didMoveInteractions: @escaping (Set<CCanvasInteraction>) -> (),
          didStartScroll: @escaping () -> (),
          didScroll: @escaping (CGVector, Bool) -> (),
          didEndScroll: @escaping () -> (),
@@ -40,7 +40,7 @@ public class CCanvasInteractView: MPView {
          didEndRotate: @escaping () -> ()) {
         
         self.canvas = canvas
-        self.didMoveCCanvasInteractions = didMoveCCanvasInteractions
+        self.didMoveInteractions = didMoveInteractions
         
         self.didStartScroll = didStartScroll
         self.didScroll = didScroll
@@ -160,7 +160,7 @@ public class CCanvasInteractView: MPView {
             canvasInteraction.velocity = velocity
             movedCCanvasInteractions.insert(canvasInteraction)
         }
-        didMoveCCanvasInteractions(movedCCanvasInteractions)
+        didMoveInteractions(movedCCanvasInteractions)
     }
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -326,7 +326,7 @@ public class CCanvasInteractView: MPView {
         let velocity: CGVector = CGVector(dx: location.x - lastLocation.x,
                                           dy: location.y - lastLocation.y)
         canvasInteraction.velocity = velocity
-        didMoveCCanvasInteractions([canvasInteraction])
+        didMoveInteractions([canvasInteraction])
     }
     
     public override func mouseMoved(with event: NSEvent) {
@@ -399,6 +399,7 @@ public class CCanvasInteractView: MPView {
     // MARK: - Rotate
     
     public override func rotate(with event: NSEvent) {
+        guard canvas.rotationEnabled else { return }
         guard canvas.trackpadEnabled else { return }
         guard let mouseLocation: CGPoint = getMouseLocation() else { return }
         guard bounds.contains(mouseLocation) else { return }

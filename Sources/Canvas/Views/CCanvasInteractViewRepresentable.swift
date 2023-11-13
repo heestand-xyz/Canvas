@@ -14,7 +14,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
 
     func makeView(context: Context) -> CCanvasInteractView {
         CCanvasInteractView(canvas: canvas,
-                            didMoveCCanvasInteractions: context.coordinator.didMoveCCanvasInteractions(_:),
+                            didMoveInteractions: context.coordinator.didMoveInteractions(_:),
                             didStartScroll: context.coordinator.didStartScroll,
                             didScroll: context.coordinator.didScroll(_:withScrollWheel:),
                             didEndScroll: context.coordinator.didEndScroll,
@@ -32,7 +32,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             
             canvasInteractView.canvas = canvas
 
-            canvasInteractView.didMoveCCanvasInteractions = context.coordinator.didMoveCCanvasInteractions(_:)
+            canvasInteractView.didMoveInteractions = context.coordinator.didMoveInteractions(_:)
             
             canvasInteractView.didStartScroll = context.coordinator.didStartScroll
             canvasInteractView.didScroll = context.coordinator.didScroll(_:withScrollWheel:)
@@ -59,7 +59,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
         let snapAngleThreshold: Angle = Angle(degrees: 5)
         let isOnGridRadiusThreshold: CGFloat = 0.2
         let initialRotationThreshold: Angle = Angle(degrees: 10)
-        let zoomScrollVelocityMultiplier: CGFloat = 0.004
+        let zoomScrollVelocityMultiplier: CGFloat = 0.0075
         let middleMouseDragVelocityMultiplier: CGFloat = 0.01
 
         @ObservedObject var canvas: CCanvas
@@ -78,6 +78,12 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
 //        var frameLoopIndex: Int = 0
         
         func frameLoop() {
+            DispatchQueue.main.async {
+                self.frameLoopMain()
+            }
+        }
+        
+        func frameLoopMain() {
             
 //            frameLoopIndex += 1
 //
@@ -109,8 +115,10 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             for interaction in canvas.interactions {
                 
                 func remove() {
-                    canvas.interactions.remove(interaction)
-                    endDrag(of: interaction)
+                    DispatchQueue.main.async {
+                        self.canvas.interactions.remove(interaction)
+                        endDrag(of: interaction)
+                    }
                 }
                 
                 if !interaction.active || interaction.timeout {
@@ -295,7 +303,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             
         }
         
-        func didMoveCCanvasInteractions(_ interactions: Set<CCanvasInteraction>) {
+        func didMoveInteractions(_ interactions: Set<CCanvasInteraction>) {
             
             /// Pan
             if let panInteraction: CCanvasInteraction = canvas.panInteraction,
@@ -333,6 +341,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                 let relativeScale: CGFloat = 1.0 + velocity.dy * zoomScrollVelocityMultiplier
                 scaleCanvas(by: relativeScale, at: mouseLocation)
             } else if canvas.keyboardFlags.contains(.option) {
+                guard canvas.rotationEnabled else { return }
                 let relativeAngle: Angle = Angle(degrees: Double(velocity.dy) * 0.5)
                 rotateCanvas(by: relativeAngle, at: mouseLocation)
             } else {
