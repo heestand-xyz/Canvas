@@ -53,6 +53,7 @@ public class CCanvas: ObservableObject, Identifiable {
     
     /// Only used for centering.
     @Published public var size: CGSize?
+    @Published public var contentAspectRatio: CGFloat?
 
     public var centerLocation: CGPoint { (size ?? .zero).asPoint / 2 }
     public var centerPosition: CGPoint { coordinate.position(at: centerLocation) }
@@ -168,6 +169,18 @@ public extension CCanvas {
     
     func scaleOffset(relativeScale: CGFloat, at location: CGPoint) -> CGPoint {
         
+        var location: CGPoint = location
+        if let contentAspectRatio: CGFloat, let size: CGSize {
+            let contentSize = CGSize(
+                width: size.aspectRatio < contentAspectRatio ? size.width : size.height * contentAspectRatio,
+                height: size.aspectRatio > contentAspectRatio ? size.height : size.width / contentAspectRatio
+            )
+            let contentOffset: CGPoint = CGPoint(
+                x: (size.width - contentSize.width) / 2.0,
+                y: (size.height - contentSize.height) / 2.0
+            )
+            location -= contentOffset
+        }
         let locationOffset: CGPoint = location - offset
         let scaledAverageLocationOffset: CGPoint = locationOffset * relativeScale
         let relativeScaleOffset: CGPoint = locationOffset - scaledAverageLocationOffset
