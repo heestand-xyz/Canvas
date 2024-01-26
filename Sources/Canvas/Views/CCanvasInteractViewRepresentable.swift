@@ -275,7 +275,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                 if filteredPotentialPanInteractions.count == 1 {
                     canvas.panInteraction = filteredPotentialPanInteractions[0]
                     let interactionPosition: CGPoint = canvas.coordinate.position(at: canvas.panInteraction!.location)
-                    #if os(iOS)
+                    #if os(iOS) || os(visionOS)
                     canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
                     #elseif os(macOS)
                     if canvas.panInteraction!.info.mouseButton == .left {
