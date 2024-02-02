@@ -8,7 +8,7 @@ public protocol CCanvasDelegate: AnyObject {
     
     
     func canvasDragGetPosition(_ drag: CCanvasDrag,
-                               coordinate: CCanvasCoordinate) -> CGPoint
+                               coordinate: CCanvasCoordinate) -> CGPoint?
     
     func canvasDragSetPosition(_ drag: CCanvasDrag,
                                to position: CGPoint,

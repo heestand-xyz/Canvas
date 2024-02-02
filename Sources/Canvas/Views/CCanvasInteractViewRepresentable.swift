@@ -112,6 +112,19 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                 }
             }
             
+            func startMove(with interaction: CCanvasInteraction) {
+                let interactionPosition: CGPoint = canvas.coordinate.position(at: interaction.location)
+#if os(iOS) || os(visionOS)
+                canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, info: interaction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+#elseif os(macOS)
+                if interaction.info.mouseButton == .left {
+                    canvas.delegate?.canvasSelectionStarted(at: interactionPosition, info: interaction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                } else if [.right, .middle].contains(interaction.info.mouseButton) {
+                    canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, info: interaction.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
+                }
+#endif
+            }
+            
             for interaction in canvas.interactions {
                 
                 func remove() {
@@ -230,6 +243,10 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                     /// Start Pinch
                     canvas.pinchInteraction = (filteredPotentialPinchInteractions[0], filteredPotentialPinchInteractions[1])
                     
+                    if canvas.panInteraction == nil {
+                        startMove(with: canvas.pinchInteraction!.0)
+                    }
+                    
                     /// End Pan
                     canvas.panInteraction = nil
                 }
@@ -274,16 +291,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
             if canvas.panInteraction == nil && canvas.pinchInteraction == nil {
                 if filteredPotentialPanInteractions.count == 1 {
                     canvas.panInteraction = filteredPotentialPanInteractions[0]
-                    let interactionPosition: CGPoint = canvas.coordinate.position(at: canvas.panInteraction!.location)
-                    #if os(iOS) || os(visionOS)
-                    canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
-                    #elseif os(macOS)
-                    if canvas.panInteraction!.info.mouseButton == .left {
-                        canvas.delegate?.canvasSelectionStarted(at: interactionPosition, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
-                    } else if [.right, .middle].contains(canvas.panInteraction!.info.mouseButton) {
-                        canvas.delegate?.canvasMoveStarted(at: interactionPosition, viaScroll: false, info: canvas.panInteraction!.info, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
-                    }
-                    #endif
+                    startMove(with: canvas.panInteraction!)
                 }
             }
             
