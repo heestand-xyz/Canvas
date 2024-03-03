@@ -109,7 +109,7 @@ struct CCanvasInteractViewRepresentable: ViewRepresentable {
                 guard let position: CGPoint = canvas.delegate?.canvasDragGetPosition(dragInteraction.drag, coordinate: canvas.coordinate) else { done(); return }
                 if !isOnGrid(position: position, snapGrid: snapGrid) {
                     dragDone(dragInteraction: dragInteraction, done: done)
-                }
+                } else { done() }
             }
             
             func startMove(with interaction: CCanvasInteraction) {
