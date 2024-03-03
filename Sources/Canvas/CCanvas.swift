@@ -111,9 +111,9 @@ extension CCanvas {
         
         let snapPosition: CGPoint
         switch snapGrid {
-        case .square(size: let size):
-            snapPosition = CGPoint(x: round(position.x / size) * size,
-                                   y: round(position.y / size) * size)
+        case .square(size: let size, let offset):
+            snapPosition = CGPoint(x: round((position.x - offset) / size) * size + offset,
+                                   y: round((position.y - offset) / size) * size + offset)
         case .triangle(size: let size):
             let width: CGFloat = size / sqrt(0.75)
             let height: CGFloat = size
