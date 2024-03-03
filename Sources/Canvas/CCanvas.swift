@@ -3,7 +3,6 @@ import SwiftUI
 import CoreGraphicsExtensions
 import MultiViews
 
-@MainActor
 public class CCanvas: ObservableObject, Identifiable {
     
     public weak var delegate: CCanvasDelegate?

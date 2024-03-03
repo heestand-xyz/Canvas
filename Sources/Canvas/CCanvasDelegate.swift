@@ -20,7 +20,8 @@ public protocol CCanvasDelegate: AnyObject {
                            info: CCanvasInteractionInfo,
                            keyboardFlags: Set<CCanvasKeyboardFlag>,
                            coordinate: CCanvasCoordinate)
-    
+
+    /// Start of animation
     func canvasDragReleased(_ drag: CCanvasDrag,
                             at position: CGPoint,
                             ignoreTap: Bool,
