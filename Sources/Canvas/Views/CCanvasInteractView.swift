@@ -74,6 +74,7 @@ public class CCanvasInteractView: MPView {
         
         #if !os(macOS)
         isMultipleTouchEnabled = true
+        contentView?.isMultipleTouchEnabled = true
         #endif
         
         #if os(macOS)
