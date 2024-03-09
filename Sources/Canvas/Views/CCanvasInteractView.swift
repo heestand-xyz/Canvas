@@ -132,9 +132,24 @@ public class CCanvasInteractView: MPView {
     
     // MARK: - Touch
     
+    func canTouch(touches: Set<UITouch>) -> Bool {
+        guard let contentView: UIView else { return true }
+        for touch in touches {
+            let location: CGPoint = touch.location(in: self)
+            if let subView: UIView = contentView.hitTest(location, with: nil) {
+                let isFill: Bool = subView.frame.origin == .zero && subView.bounds.size == contentView.bounds.size
+                if !isFill {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+    
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         Logger.log(frequency: .verbose)
         guard canvas.interactionEnabled else { return }
+        guard canTouch(touches: touches) else { return }
         for touch in touches {
             let id = UUID()
             let location: CGPoint = touch.location(in: self)

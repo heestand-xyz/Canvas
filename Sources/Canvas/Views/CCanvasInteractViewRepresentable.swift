@@ -16,6 +16,7 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
 
     func makeView(context: Context) -> CCanvasInteractView {
         let contentView: MPView = MPHostingController(rootView: content()).view
+        contentView.backgroundColor = .clear
         return CCanvasInteractView(
             canvas: canvas,
             contentView: contentView,
