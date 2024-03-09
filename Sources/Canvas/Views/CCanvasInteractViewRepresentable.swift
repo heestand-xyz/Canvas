@@ -4,26 +4,32 @@ import CoreGraphics
 import CoreGraphicsExtensions
 import DisplayLink
 
-struct CCanvasInteractViewRepresentable: ViewRepresentable {
+struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
 
     @ObservedObject var canvas: CCanvas
+    let content: () -> Content
     
-    init(canvas: CCanvas) {
+    init(canvas: CCanvas, content: @escaping () -> Content = { EmptyView() }) {
         self.canvas = canvas
+        self.content = content
     }
 
     func makeView(context: Context) -> CCanvasInteractView {
-        CCanvasInteractView(canvas: canvas,
-                            didMoveInteractions: context.coordinator.didMoveInteractions(_:),
-                            didStartScroll: context.coordinator.didStartScroll,
-                            didScroll: context.coordinator.didScroll(_:withScrollWheel:),
-                            didEndScroll: context.coordinator.didEndScroll,
-                            didStartMagnify: context.coordinator.didStartMagnify,
-                            didMagnify: context.coordinator.didMagnify(_:),
-                            didEndMagnify: context.coordinator.didEndMagnify,
-                            didStartRotate: context.coordinator.didStartRotate,
-                            didRotate: context.coordinator.didRotate(_:),
-                            didEndRotate: context.coordinator.didEndRotate)
+        let contentView: MPView = MPHostingController(rootView: content()).view
+        return CCanvasInteractView(
+            canvas: canvas,
+            contentView: contentView,
+            didMoveInteractions: context.coordinator.didMoveInteractions(_:),
+            didStartScroll: context.coordinator.didStartScroll,
+            didScroll: context.coordinator.didScroll(_:withScrollWheel:),
+            didEndScroll: context.coordinator.didEndScroll,
+            didStartMagnify: context.coordinator.didStartMagnify,
+            didMagnify: context.coordinator.didMagnify(_:),
+            didEndMagnify: context.coordinator.didEndMagnify,
+            didStartRotate: context.coordinator.didStartRotate,
+            didRotate: context.coordinator.didRotate(_:),
+            didEndRotate: context.coordinator.didEndRotate
+        )
     }
     
     func updateView(_ canvasInteractView: CCanvasInteractView, context: Context) {

@@ -1,18 +1,21 @@
 import SwiftUI
 
-public struct CCanvasView: View {
+public struct CCanvasView<Content: View>: View {
     
     @ObservedObject var canvas: CCanvas
     
-    public init(canvas: CCanvas) {
+    let content: () -> Content
+    
+    public init(canvas: CCanvas, @ViewBuilder content: @escaping () -> Content = { EmptyView() }) {
         self.canvas = canvas
+        self.content = content
     }
     
     public var body: some View {
         
         ZStack(alignment: .topLeading) {
             
-            /// Touches
+            /// Debug of Touches
 //            #if DEBUG
 //            ForEach(Array(canvas.interactions)) { interaction in
 //                Circle()
@@ -34,6 +37,7 @@ public struct CCanvasView: View {
 //            }
 //            #endif
             
+            /// Debug of Coodinates
 //            #if DEBUG
 //            ZStack(alignment: .bottomLeading) {
 //                Color.clear
@@ -52,10 +56,12 @@ public struct CCanvasView: View {
 //            #endif
             
             // Interact
-            CCanvasInteractViewRepresentable(canvas: canvas)
-            
+            CCanvasInteractViewRepresentable(canvas: canvas) {
+                ZStack(alignment: .topLeading) {
+                    Color.clear
+                    content()
+                }
+            }
         }
-        
     }
-    
 }

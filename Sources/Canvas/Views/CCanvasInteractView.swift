@@ -26,8 +26,11 @@ public class CCanvasInteractView: MPView {
     let scrollThreshold: CGFloat = 1.5
     let middleMouseScrollVelocityMultiplier: CGFloat = 10
     #endif
+    
+    private let contentView: MPView?
 
     init(canvas: CCanvas,
+         contentView: MPView?,
          didMoveInteractions: @escaping (Set<CCanvasInteraction>) -> (),
          didStartScroll: @escaping () -> (),
          didScroll: @escaping (CGVector, Bool) -> (),
@@ -53,8 +56,21 @@ public class CCanvasInteractView: MPView {
         self.didStartRotate = didStartRotate
         self.didRotate = didRotate
         self.didEndRotate = didEndRotate
+        
+        self.contentView = contentView
 
         super.init(frame: .zero)
+        
+        if let contentView {
+            contentView.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(contentView)
+            NSLayoutConstraint.activate([
+                contentView.topAnchor.constraint(equalTo: topAnchor),
+                contentView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                contentView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                contentView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            ])
+        }
         
         #if !os(macOS)
         isMultipleTouchEnabled = true
