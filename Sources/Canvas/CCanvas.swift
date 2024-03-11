@@ -29,7 +29,16 @@ public class CCanvas: ObservableObject, Identifiable {
     }
     public var scale: CGFloat {
         get { coordinate.scale }
-        set { coordinate.scale = newValue }
+        set {
+            var scale: CGFloat = newValue
+            if let minimumScale: CGFloat {
+                scale = max(minimumScale, scale)
+            }
+            if let maximumScale: CGFloat {
+                scale = min(maximumScale, scale)
+            }
+            coordinate.scale = scale
+        }
     }
     public var angle: Angle {
         get { coordinate.angle }
@@ -73,6 +82,9 @@ public class CCanvas: ObservableObject, Identifiable {
 #if os(macOS)
     public var useCustomWindow: Bool = false
 #endif
+    
+    public var minimumScale: CGFloat?
+    public var maximumScale: CGFloat?
     
     public init(physics: Bool = iOS, rotate: Bool = false, snapGridToAngle: Angle? = nil, magnifyInPlace: Bool = false) {
         self.id = UUID()

@@ -723,10 +723,13 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
         
         func scaleCanvas(by relativeScale: CGFloat, at location: CGPoint) {
             
+            let oldScale: CGFloat = canvas.scale
             canvas.scale *= relativeScale
+            let newScale: CGFloat = canvas.scale
+            let realRelativeScale: CGFloat = newScale / oldScale
 
             if !canvas.magnifyInPlace {
-                offsetCanvas(by: canvas.scaleOffset(relativeScale: relativeScale, at: location).asVector)
+                offsetCanvas(by: canvas.scaleOffset(relativeScale: realRelativeScale, at: location).asVector)
             }
         }
         
