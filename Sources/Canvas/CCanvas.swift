@@ -78,6 +78,20 @@ public class CCanvas: ObservableObject, Identifiable {
     public var trackpadEnabled: Bool = true
     public var rotationEnabled: Bool
     public var magnifyInPlace: Bool
+    
+    public var maximumTapCount: Int = 2
+    public var tapDuration: TimeInterval = 0.25
+    public var betweenTapDuration: TimeInterval = 0.25
+    public var tapDistance: CGFloat = {
+        #if os(macOS)
+        return 10
+        #else
+        return 20
+        #endif
+    }()
+    internal var tapCount: Int?
+    internal var tapTimer: Timer?
+    internal var tapKeyboardFlags: Set<CCanvasKeyboardFlag>?
 
 #if os(macOS)
     public var useCustomWindow: Bool = false

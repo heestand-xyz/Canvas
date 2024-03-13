@@ -100,6 +100,62 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
 //            guard frameLoopIndex % 30 == 0 else { return }
 //            #endif
             
+            func potentialTap(of interaction: CCanvasInteraction) {
+                guard canvas.maximumTapCount > 0 else { return }
+                func clearTimer() {
+                    canvas.tapTimer?.invalidate()
+                    canvas.tapTimer = nil
+                }
+                clearTimer()
+                func clean() {
+                    canvas.tapCount = nil
+                    canvas.tapKeyboardFlags = nil
+                    clearTimer()
+                }
+                guard interaction.duration < canvas.tapDuration else {
+                    clean()
+                    return
+                }
+                guard interaction.distance < canvas.tapDistance else {
+                    clean()
+                    return
+                }
+                func tap(count: Int) {
+                    guard let tapKeyboardFlags: Set<CCanvasKeyboardFlag> = canvas.tapKeyboardFlags else {
+                        clean()
+                        return
+                    }
+                    let position: CGPoint = canvas.coordinate.position(at: interaction.location)
+#if os(macOS)
+                    canvas.delegate?.canvasClick(count: count, at: position, with: interaction.info.mouseButton, keyboardFlags: tapKeyboardFlags, coordinate: canvas.coordinate)
+#else
+                    canvas.delegate?.canvasTap(count: count, at: position, coordinate: canvas.coordinate)
+#endif
+                    clean()
+                }
+                func wait(count: Int) {
+                    canvas.tapCount = count
+                    canvas.tapTimer = .scheduledTimer(withTimeInterval: canvas.betweenTapDuration, repeats: false) { _ in
+                        tap(count: count)
+                    }
+                }
+                if let tapCount = canvas.tapCount {
+                    let newTapCount = tapCount + 1
+                    if newTapCount == canvas.maximumTapCount {
+                        tap(count: newTapCount)
+                    } else {
+                        wait(count: newTapCount)
+                    }
+                } else {
+                    canvas.tapKeyboardFlags = canvas.keyboardFlags
+                    if canvas.maximumTapCount > 1 {
+                        wait(count: 1)
+                    } else {
+                        tap(count: 1)
+                    }
+                }
+            }
+            
             func endDrag(of interaction: CCanvasInteraction) {
                 if let dragInteraction: CCanvasDragInteraction = canvas.dragInteractions.first(where: { dragInteraction in
                     dragInteraction.interaction == interaction
@@ -281,6 +337,7 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
                     }
                     #endif
                     canvas.panInteraction = nil
+                    potentialTap(of: panInteraction)
                 } else if !panInteraction.active {
                     if filteredPotentialPanInteractions.count == 1 {
                         #if !os(macOS)
@@ -293,6 +350,7 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
                         }
                         #endif
                         canvas.panInteraction = nil
+                        potentialTap(of: panInteraction)
                     }
                 }
             }

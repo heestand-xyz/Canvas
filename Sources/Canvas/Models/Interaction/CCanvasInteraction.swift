@@ -23,6 +23,11 @@ class CCanvasInteraction: Identifiable {
     
     let id: UUID
     
+    let startTime: Date
+    var duration: TimeInterval {
+        startTime.distance(to: Date())
+    }
+    
     let startLocation: CGPoint
     var location: CGPoint {
         didSet {
@@ -32,6 +37,9 @@ class CCanvasInteraction: Identifiable {
     var lastLocation: CGPoint {
         CGPoint(x: location.x - velocity.dx,
                 y: location.y - velocity.dy)
+    }
+    var distance: CGFloat {
+        sqrt(pow(location.x - startLocation.x, 2.0) + pow(location.y - startLocation.y, 2.0))
     }
 
     var velocity: CGVector
@@ -68,6 +76,7 @@ class CCanvasInteraction: Identifiable {
          location: CGPoint,
          info: CCanvasInteractionInfo) {
         self.id = id
+        startTime = Date()
         self.startLocation = location
         self.location = location
         self.velocity = CGVector(dx: 0.0, dy: 0.0)
