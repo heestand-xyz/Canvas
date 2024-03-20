@@ -192,6 +192,7 @@ public class CCanvasInteractView: MPView {
             }) else { continue }
             canvasInteraction.active = false
         }
+        didEndInteract()
     }
     
     public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -263,8 +264,6 @@ public class CCanvasInteractView: MPView {
         if didHandleEvent == false {
             super.pressesEnded(presses, with: event)
         }
-        
-        didEndInteract()
     }
     
     #else
