@@ -20,6 +20,8 @@ public class CCanvasInteractView: MPView {
     var didRotate: (CGFloat) -> ()
     var didEndRotate: () -> ()
     
+    var didEndInteract: () -> ()
+    
     #if os(macOS)
     var scrollTimer: Timer?
     let scrollTimeout: Double = 0.15
@@ -40,7 +42,8 @@ public class CCanvasInteractView: MPView {
          didEndMagnify: @escaping () -> (),
          didStartRotate: @escaping () -> (),
          didRotate: @escaping (CGFloat) -> (),
-         didEndRotate: @escaping () -> ()) {
+         didEndRotate: @escaping () -> (),
+         didEndInteract: @escaping () -> ()) {
         
         self.canvas = canvas
         self.didMoveInteractions = didMoveInteractions
@@ -56,6 +59,8 @@ public class CCanvasInteractView: MPView {
         self.didStartRotate = didStartRotate
         self.didRotate = didRotate
         self.didEndRotate = didEndRotate
+        
+        self.didEndInteract = didEndInteract
         
         self.contentView = contentView
 
@@ -258,6 +263,8 @@ public class CCanvasInteractView: MPView {
         if didHandleEvent == false {
             super.pressesEnded(presses, with: event)
         }
+        
+        didEndInteract()
     }
     
     #else
@@ -298,6 +305,7 @@ public class CCanvasInteractView: MPView {
         guard canvas.interactionEnabled else { return }
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
+        didEndInteract()
     }
     
     public override func rightMouseUp(with event: NSEvent) {
@@ -305,6 +313,7 @@ public class CCanvasInteractView: MPView {
         guard canvas.interactionEnabled else { return }
         guard let canvasInteraction: CCanvasInteraction = canvas.interactions.first else { return }
         canvasInteraction.active = false
+        didEndInteract()
     }
     
     public override func otherMouseUp(with event: NSEvent) {
@@ -318,6 +327,7 @@ public class CCanvasInteractView: MPView {
             guard let location: CGPoint = getMouseLocation() else { return }
             canvas.delegate?.canvasCustomMouseButtonPress(at: location, with: customMouseButton, keyboardFlags: canvas.keyboardFlags, coordinate: canvas.coordinate)
         }
+        didEndInteract()
     }
     
     public override func mouseDragged(with event: NSEvent) {
