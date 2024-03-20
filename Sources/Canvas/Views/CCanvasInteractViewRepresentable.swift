@@ -36,6 +36,7 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
     }
     
     func updateView(_ canvasInteractView: CCanvasInteractView, context: Context) {
+        
         if context.coordinator.canvas != canvas {
             context.coordinator.canvas = canvas
             
@@ -55,6 +56,10 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
             canvasInteractView.didRotate = context.coordinator.didRotate(_:)
             canvasInteractView.didEndRotate = context.coordinator.didEndRotate
         }
+        
+        if !context.coordinator.canvas.isTimeBased {
+            context.coordinator.main()
+        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -73,29 +78,37 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
 
         @ObservedObject var canvas: CCanvas
 
-        let displayLink: DisplayLink
+        let displayLink: DisplayLink?
         
         init(canvas: CCanvas) {
             
             self.canvas = canvas
             
-            displayLink = DisplayLink()
             
-            displayLink.listen(frameLoop: frameLoop)
-        }
-        
-//        var frameLoopIndex: Int = 0
-        
-        func frameLoop() {
-            DispatchQueue.main.async {
-                self.frameLoopMain()
+            if canvas.isTimeBased {
+                displayLink = DisplayLink()
+                displayLink!.listen(frameLoop: frameLoop)
+            } else {
+                displayLink = nil
             }
         }
         
-        func frameLoopMain() {
+        deinit {
+            displayLink?.stop()
+        }
+        
+        var frameLoopIndex: Int = 0
+        
+        func frameLoop() {
+            DispatchQueue.main.async {
+                self.main()
+            }
+        }
+        
+        func main() {
             
-//            frameLoopIndex += 1
-//
+            frameLoopIndex += 1
+
 //            #if DEBUG
 //            guard frameLoopIndex % 30 == 0 else { return }
 //            #endif

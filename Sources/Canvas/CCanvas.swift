@@ -9,7 +9,7 @@ public class CCanvas: ObservableObject, Identifiable {
     
     public let id: UUID
     
-    var physics: Bool = iOS
+    var physics: Bool
     let snapGridToAngle: Angle?
     
     // FIXME: Window can't be strong, it will not deallocate.
@@ -73,6 +73,10 @@ public class CCanvas: ObservableObject, Identifiable {
     
     @Published public var keyboardFlags: Set<CCanvasKeyboardFlag> = []
     @Published public var mouseLocation: CGPoint? = nil
+    
+    var isTimeBased: Bool {
+        physics
+    }
     
     public var interactionEnabled: Bool = true
     public var trackpadEnabled: Bool = true
