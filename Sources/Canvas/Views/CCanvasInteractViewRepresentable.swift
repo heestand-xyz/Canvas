@@ -32,6 +32,8 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
             didStartRotate: context.coordinator.didStartRotate,
             didRotate: context.coordinator.didRotate(_:),
             didEndRotate: context.coordinator.didEndRotate,
+            didStartInteract: context.coordinator.didStartInteract,
+            didInteract: context.coordinator.didInteract,
             didEndInteract: context.coordinator.didEndInteract
         )
     }
@@ -60,9 +62,9 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
             canvasInteractView.didEndInteract = context.coordinator.didEndInteract
         }
         
-        if !context.coordinator.canvas.isTimeBased {
-            context.coordinator.main()
-        }
+//        if !context.coordinator.canvas.isTimeBased {
+//            context.coordinator.main()
+//        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -105,6 +107,18 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
         func frameLoop() {
             DispatchQueue.main.async {
                 self.main()
+            }
+        }
+        
+        func didStartInteract() {
+            if !canvas.isTimeBased {
+                main()
+            }
+        }
+        
+        func didInteract() {
+            if !canvas.isTimeBased {
+                main()
             }
         }
         

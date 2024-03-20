@@ -20,6 +20,8 @@ public class CCanvasInteractView: MPView {
     var didRotate: (CGFloat) -> ()
     var didEndRotate: () -> ()
     
+    var didStartInteract: () -> ()
+    var didInteract: () -> ()
     var didEndInteract: () -> ()
     
     #if os(macOS)
@@ -43,6 +45,8 @@ public class CCanvasInteractView: MPView {
          didStartRotate: @escaping () -> (),
          didRotate: @escaping (CGFloat) -> (),
          didEndRotate: @escaping () -> (),
+         didStartInteract: @escaping () -> (),
+         didInteract: @escaping () -> (),
          didEndInteract: @escaping () -> ()) {
         
         self.canvas = canvas
@@ -60,6 +64,8 @@ public class CCanvasInteractView: MPView {
         self.didRotate = didRotate
         self.didEndRotate = didEndRotate
         
+        self.didStartInteract = didStartInteract
+        self.didInteract = didInteract
         self.didEndInteract = didEndInteract
         
         self.contentView = contentView
@@ -163,6 +169,7 @@ public class CCanvasInteractView: MPView {
             canvasInteraction.touch = touch
             canvas.interactions.insert(canvasInteraction)
         }
+        didStartInteract()
     }
     
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -181,6 +188,7 @@ public class CCanvasInteractView: MPView {
             movedCCanvasInteractions.insert(canvasInteraction)
         }
         didMoveInteractions(movedCCanvasInteractions)
+        didInteract()
     }
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -204,6 +212,7 @@ public class CCanvasInteractView: MPView {
             }) else { continue }
             canvasInteraction.active = false
         }
+        didEndInteract()
     }
     
     public override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
@@ -277,6 +286,7 @@ public class CCanvasInteractView: MPView {
         let id = UUID()
         let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, mouseButton: .left))
         canvas.interactions.insert(canvasInteraction)
+        didStartInteract()
     }
     
     public override func rightMouseDown(with event: NSEvent) {
@@ -286,6 +296,7 @@ public class CCanvasInteractView: MPView {
         let id = UUID()
         let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, mouseButton: .right))
         canvas.interactions.insert(canvasInteraction)
+        didStartInteract()
     }
     public override func otherMouseDown(with event: NSEvent) {
         Logger.log(frequency: .verbose)
@@ -297,6 +308,7 @@ public class CCanvasInteractView: MPView {
             let canvasInteraction = CCanvasInteraction(id: id, location: location, info: CCanvasInteractionInfo(view: self, event: event, mouseButton: .middle))
             canvas.interactions.insert(canvasInteraction)
         }
+        didStartInteract()
     }
     
     public override func mouseUp(with event: NSEvent) {
@@ -331,14 +343,17 @@ public class CCanvasInteractView: MPView {
     
     public override func mouseDragged(with event: NSEvent) {
         mouseDragged()
+        didInteract()
     }
     
     public override func rightMouseDragged(with event: NSEvent) {
         mouseDragged()
+        didInteract()
     }
     
     public override func otherMouseDragged(with event: NSEvent) {
         mouseDragged()
+        didInteract()
     }
     
     func mouseDragged() {
@@ -392,6 +407,7 @@ public class CCanvasInteractView: MPView {
         }
         
         didScroll(delta, withScrollWheel)
+        didInteract()
         
         scrollTimer?.invalidate()
         scrollTimer = Timer(timeInterval: scrollTimeout, repeats: false, block: { [weak self] _ in
