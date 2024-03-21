@@ -125,6 +125,11 @@ struct CCanvasInteractViewRepresentable<Content: View>: ViewRepresentable {
         func didEndInteract() {
             if !canvas.isTimeBased {
                 main()
+#if os(macOS)
+                DispatchQueue.main.async {
+                    self.main()
+                }
+#endif
             }
         }
         
