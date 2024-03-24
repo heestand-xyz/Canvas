@@ -33,7 +33,7 @@ public class CCanvasInteractView: MPView {
     
     private let contentView: MPView?
 
-    init(canvas: CCanvas,
+    public init(canvas: CCanvas,
          contentView: MPView?,
          didMoveInteractions: @escaping (Set<CCanvasInteraction>) -> (),
          didStartScroll: @escaping () -> (),
