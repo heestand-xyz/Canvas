@@ -19,9 +19,9 @@ public struct CCanvasInteractionInfo {
     #endif
 }
 
-class CCanvasInteraction: Identifiable {
+public class CCanvasInteraction: Identifiable {
     
-    let id: UUID
+    public let id: UUID
     
     let startTime: Date
     var duration: TimeInterval {
@@ -98,13 +98,13 @@ class CCanvasInteraction: Identifiable {
 }
 
 extension CCanvasInteraction: Equatable {
-    static func == (lhs: CCanvasInteraction, rhs: CCanvasInteraction) -> Bool {
+    public static func == (lhs: CCanvasInteraction, rhs: CCanvasInteraction) -> Bool {
         lhs.id == rhs.id
     }
 }
 
 extension CCanvasInteraction: Hashable {
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }

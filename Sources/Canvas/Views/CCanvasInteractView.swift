@@ -33,21 +33,23 @@ public class CCanvasInteractView: MPView {
     
     private let contentView: MPView?
 
-    public init(canvas: CCanvas,
-         contentView: MPView?,
-         didMoveInteractions: @escaping (Set<CCanvasInteraction>) -> (),
-         didStartScroll: @escaping () -> (),
-         didScroll: @escaping (CGVector, Bool) -> (),
-         didEndScroll: @escaping () -> (),
-         didStartMagnify: @escaping () -> (),
-         didMagnify: @escaping (CGFloat) -> (),
-         didEndMagnify: @escaping () -> (),
-         didStartRotate: @escaping () -> (),
-         didRotate: @escaping (CGFloat) -> (),
-         didEndRotate: @escaping () -> (),
-         didStartInteract: @escaping () -> (),
-         didInteract: @escaping () -> (),
-         didEndInteract: @escaping () -> ()) {
+    public init(
+        canvas: CCanvas,
+        contentView: MPView?,
+        didMoveInteractions: @escaping (Set<CCanvasInteraction>) -> (),
+        didStartScroll: @escaping () -> (),
+        didScroll: @escaping (CGVector, Bool) -> (),
+        didEndScroll: @escaping () -> (),
+        didStartMagnify: @escaping () -> (),
+        didMagnify: @escaping (CGFloat) -> (),
+        didEndMagnify: @escaping () -> (),
+        didStartRotate: @escaping () -> (),
+        didRotate: @escaping (CGFloat) -> (),
+        didEndRotate: @escaping () -> (),
+        didStartInteract: @escaping () -> (),
+        didInteract: @escaping () -> (),
+        didEndInteract: @escaping () -> ()
+    ) {
         
         self.canvas = canvas
         self.didMoveInteractions = didMoveInteractions
