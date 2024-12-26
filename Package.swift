@@ -16,7 +16,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/heestand-xyz/MultiViews", from: "2.1.0"),
-        .package(url: "https://github.com/heestand-xyz/CoreGraphicsExtensions", from: "1.5.0"),
+        .package(url: "https://github.com/heestand-xyz/CoreGraphicsExtensions", from: "2.0.0"),
         .package(url: "https://github.com/heestand-xyz/DisplayLink", from: "1.0.5"),
         .package(url: "https://github.com/heestand-xyz/Logger", from: "0.3.1"),
     ],
