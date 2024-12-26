@@ -5,8 +5,8 @@ import PackageDescription
 let package = Package(
     name: "Canvas",
     platforms: [
-        .iOS(.v14),
-        .macOS(.v11),
+        .iOS(.v16),
+        .macOS(.v13),
         .visionOS(.v1)
     ],
     products: [
